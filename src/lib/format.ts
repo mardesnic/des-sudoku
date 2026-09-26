@@ -6,5 +6,3 @@ export function formatTime(ms: number) {
   const s = String(total % 60).padStart(2, '0');
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
-
-export const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);

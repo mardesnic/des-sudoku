@@ -1,5 +1,6 @@
 import { box, col, digits, row } from '../lib/sudoku';
 import { conflicts, isGiven, type Game } from '../lib/game';
+import type { Strings } from '../lib/i18n';
 
 type Props = {
   game: Game;
@@ -7,6 +8,7 @@ type Props = {
   showMistakes: boolean;
   paused: boolean;
   onSelect: (i: number) => void;
+  t: Strings;
 };
 
 const BOXES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -24,6 +26,7 @@ export function Board({
   showMistakes,
   paused,
   onSelect,
+  t,
 }: Props) {
   const { values, notes, solution } = game;
   const clashes = conflicts(values);
@@ -60,7 +63,7 @@ export function Board({
               className={cellClass(i)}
               onClick={() => onSelect(i)}
               disabled={paused}
-              aria-label={`Row ${row(i) + 1}, column ${col(i) + 1}${
+              aria-label={`${t.cell(row(i) + 1, col(i) + 1)}${
                 values[i] ? `, ${values[i]}` : ''
               }`}
             >

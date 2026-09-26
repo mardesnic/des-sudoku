@@ -1,25 +1,28 @@
-import { capitalize, formatTime } from '../lib/format';
+import { formatTime } from '../lib/format';
+import { HINT_LIMITS, type Settings, type Stats } from '../lib/game';
+import { LANG_NAMES, LANGS, type Language, type Strings } from '../lib/i18n';
 import { DIFFICULTIES, type Difficulty } from '../lib/sudoku';
-import type { Settings, Stats } from '../lib/game';
 
 export function NewGame({
   stats,
   onStart,
+  t,
 }: {
   stats: Stats;
   onStart: (d: Difficulty) => void;
+  t: Strings;
 }) {
   return (
     <section className='card'>
-      <h2>New game</h2>
+      <h2>{t.newGame}</h2>
       <div className='levels'>
         {DIFFICULTIES.map((d) => (
           <button key={d} className='level' onClick={() => onStart(d)}>
-            <span>{capitalize(d)}</span>
+            <span>{t.levels[d]}</span>
             <span className='muted'>
               {stats[d].best === undefined
-                ? DESCRIPTIONS[d]
-                : `Best ${formatTime(stats[d].best)}`}
+                ? t.descriptions[d]
+                : t.best(formatTime(stats[d].best))}
             </span>
           </button>
         ))}
@@ -28,23 +31,20 @@ export function NewGame({
   );
 }
 
-const DESCRIPTIONS: Record<Difficulty, string> = {
-  easy: 'Plenty of numbers to start',
-  medium: 'Fewer numbers to start',
-  hard: 'Needs a few tricks',
-  expert: 'Needs pairs and X-wings',
-};
+type Toggle = 'showMistakes' | 'autoNotes' | 'showTimer';
 
 export function SettingsView({
   settings,
   setSettings,
   stats,
+  t,
 }: {
   settings: Settings;
   setSettings: (s: Settings) => void;
   stats: Stats;
+  t: Strings;
 }) {
-  const toggle = (key: keyof Settings, label: string, detail: string) => (
+  const toggle = (key: Toggle, label: string, detail: string) => (
     <label className='check'>
       <input
         type='checkbox'
@@ -58,36 +58,60 @@ export function SettingsView({
     </label>
   );
 
+  const languages: Language[] = ['auto', ...LANGS];
+
   return (
     <>
       <section className='card'>
-        <h2>Settings</h2>
-        {toggle(
-          'showMistakes',
-          'Show mistakes',
-          'Wrong numbers turn red. When off, only numbers that repeat in a row, column or box do.'
-        )}
-        {toggle(
-          'autoNotes',
-          'Tidy notes',
-          'Entering a number removes it from the notes in its row, column and box.'
-        )}
-        {toggle(
-          'showTimer',
-          'Show timer',
-          'The time is still recorded when hidden.'
-        )}
+        <h2>{t.settings}</h2>
+        {toggle('showMistakes', t.showMistakes, t.showMistakesDetail)}
+        {toggle('autoNotes', t.tidyNotes, t.tidyNotesDetail)}
+        {toggle('showTimer', t.showTimer, t.showTimerDetail)}
+
+        <div className='field'>
+          <span>
+            {t.hints}
+            <span className='muted'>{t.hintsDetail}</span>
+          </span>
+          <div className='segmented'>
+            {HINT_LIMITS.map((limit) => (
+              <button
+                key={String(limit)}
+                aria-pressed={settings.hintLimit === limit}
+                aria-label={limit === null ? t.unlimited : undefined}
+                onClick={() => setSettings({ ...settings, hintLimit: limit })}
+              >
+                {limit === null ? '∞' : limit === 0 ? t.off : limit}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className='field'>
+          <span>{t.language}</span>
+          <div className='segmented'>
+            {languages.map((l) => (
+              <button
+                key={l}
+                aria-pressed={settings.language === l}
+                onClick={() => setSettings({ ...settings, language: l })}
+              >
+                {l === 'auto' ? t.automatic : LANG_NAMES[l]}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className='card'>
-        <h2>Statistics</h2>
+        <h2>{t.statistics}</h2>
         <table className='stats'>
           <thead>
             <tr>
               <th />
-              <th>Solved</th>
-              <th>Best</th>
-              <th>Average</th>
+              <th>{t.solvedColumn}</th>
+              <th>{t.bestColumn}</th>
+              <th>{t.average}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,7 +119,7 @@ export function SettingsView({
               const s = stats[d];
               return (
                 <tr key={d}>
-                  <th>{capitalize(d)}</th>
+                  <th>{t.levels[d]}</th>
                   <td>{s.solved}</td>
                   <td>{s.best === undefined ? '–' : formatTime(s.best)}</td>
                   <td>{s.solved ? formatTime(s.total / s.solved) : '–'}</td>

@@ -15,11 +15,12 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 - Notes (pencil marks), tidied up automatically as you fill in numbers
 - Highlights the row, column, box and matching numbers of the selected cell
 - Mistakes shown in red, or only repeated numbers if you prefer
-- Hints that fill in the easiest cell to work out next
+- Hints that fill in the easiest cell to work out next: 5 per game by default, or 3, 10, unlimited or off
 - Undo, erase, and a count of how many of each number are left
 - Timer with pause, and best and average times for each level
 - Keyboard play on a computer: digits, arrow keys, Backspace, N for notes, Ctrl+Z to undo
 - Picks up where you left off after a reload
+- In English and Croatian, following the phone's language unless you pick one
 - Light and dark mode, no ads, accounts or tracking
 
 ## Development
@@ -27,7 +28,7 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # generator, solver and game tests
+npm test           # generator, solver, game and translation tests
 npm run build      # production build in dist/
 ```
 

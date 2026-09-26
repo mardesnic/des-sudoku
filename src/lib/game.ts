@@ -1,3 +1,4 @@
+import type { Language } from './i18n';
 import {
   PEERS,
   UNITS,
@@ -27,13 +28,22 @@ export type Settings = {
   showMistakes: boolean;
   autoNotes: boolean; // clear a digit's pencil marks from peers on entry
   showTimer: boolean;
+  hintLimit: number | null; // hints per game: 0 turns them off, null is unlimited
+  language: Language;
 };
 
 export const initialSettings: Settings = {
   showMistakes: true,
   autoNotes: true,
   showTimer: true,
+  hintLimit: 5,
+  language: 'auto',
 };
+
+export const HINT_LIMITS = [0, 3, 5, 10, null];
+
+export const hintsLeft = (game: Game, limit: number | null) =>
+  limit === null ? Infinity : Math.max(limit - game.hints, 0);
 
 export type Best = { solved: number; best?: number; total: number };
 export type Stats = { [D in Difficulty]: Best };

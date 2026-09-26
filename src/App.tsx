@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 import { Board } from './components/Board';
 import { Icon } from './components/Icon';
 import { NewGame, SettingsView } from './components/Menu';
-import { capitalize, formatTime } from './lib/format';
+import { formatTime } from './lib/format';
 import {
   enter,
   erase,
   hint,
+  hintsLeft,
   initialSettings,
   initialStats,
   newGame,
@@ -19,6 +20,7 @@ import {
   type Settings,
   type Stats,
 } from './lib/game';
+import { STRINGS, detectLang } from './lib/i18n';
 import { generate, type Difficulty } from './lib/sudoku';
 import { useStoredState } from './lib/use-stored-state';
 import { useTicker } from './lib/use-ticker';
@@ -38,6 +40,12 @@ export default function App() {
   const [notesMode, setNotesMode] = useState(false);
   const [paused, setPaused] = useState(false);
   const visible = useVisible();
+
+  const lang = settings.language === 'auto' ? detectLang() : settings.language;
+  const t = STRINGS[lang];
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const playing = view === 'play' && !!game && !game.solved;
   useTicker(playing && !paused && visible, (ms) =>
@@ -73,8 +81,10 @@ export default function App() {
     if (game && selected !== undefined) update(erase(game, selected));
   };
 
+  const left = game ? hintsLeft(game, settings.hintLimit) : 0;
+
   const showHint = () => {
-    if (!game) return;
+    if (!game || left <= 0) return;
     const [next, i] = hint(game, selected);
     update(next);
     if (i !== undefined) setSelected(i);
@@ -124,13 +134,13 @@ export default function App() {
                 className='button button--small'
                 onClick={() => setView('new')}
               >
-                New game
+                {t.newGame}
               </button>
               <button
                 className='button button--small'
                 onClick={() => setView('settings')}
               >
-                Settings
+                {t.settings}
               </button>
             </>
           ) : (
@@ -139,30 +149,29 @@ export default function App() {
                 className='button button--small'
                 onClick={() => setView('play')}
               >
-                {view === 'new' ? 'Cancel' : 'Done'}
+                {view === 'new' ? t.cancel : t.done}
               </button>
             )
           )}
         </div>
       </header>
 
-      {view === 'new' && <NewGame stats={stats} onStart={start} />}
+      {view === 'new' && <NewGame stats={stats} onStart={start} t={t} />}
       {view === 'settings' && (
         <SettingsView
           settings={settings}
           setSettings={setSettings}
           stats={stats}
+          t={t}
         />
       )}
 
       {view === 'play' && game && (
         <>
           <div className='status'>
-            <span>{capitalize(game.difficulty)}</span>
+            <span>{t.levels[game.difficulty]}</span>
             {settings.showMistakes && (
-              <span className='muted'>
-                {game.mistakes} {game.mistakes === 1 ? 'mistake' : 'mistakes'}
-              </span>
+              <span className='muted'>{t.mistakes(game.mistakes)}</span>
             )}
             <span className='status__time'>
               {settings.showTimer && formatTime(game.elapsed)}
@@ -170,7 +179,7 @@ export default function App() {
                 <button
                   className='icon-button'
                   onClick={() => setPaused(!paused)}
-                  aria-label={paused ? 'Resume' : 'Pause'}
+                  aria-label={paused ? t.resume : t.pause}
                 >
                   <Icon name={paused ? 'play' : 'pause'} />
                 </button>
@@ -185,57 +194,65 @@ export default function App() {
               showMistakes={settings.showMistakes}
               paused={paused}
               onSelect={setSelected}
+              t={t}
             />
             {paused && (
               <button className='paused' onClick={() => setPaused(false)}>
                 <Icon name='play' />
-                Paused
+                {t.paused}
               </button>
             )}
           </div>
 
           {game.solved ? (
             <section className='card solved'>
-              <h2>Solved!</h2>
+              <h2>{t.solved}</h2>
               <p>
-                {capitalize(game.difficulty)} in {formatTime(game.elapsed)}
+                {t.solvedIn(
+                  t.levels[game.difficulty],
+                  formatTime(game.elapsed)
+                )}
                 {stats[game.difficulty].best === game.elapsed &&
                   stats[game.difficulty].solved > 1 &&
-                  ', a new best'}
+                  t.newBest}
               </p>
               <p className='muted'>
-                {summary(game.mistakes, 'mistake')} ·{' '}
-                {summary(game.hints, 'hint')}
+                {game.mistakes ? t.mistakes(game.mistakes) : t.noMistakes} ·{' '}
+                {game.hints ? t.hintsUsed(game.hints) : t.noHints}
               </p>
               <div className='solved__actions'>
                 <button
                   className='button'
                   onClick={() => start(game.difficulty)}
                 >
-                  Another {game.difficulty} one
+                  {t.another(t.levels[game.difficulty])}
                 </button>
                 <button
                   className='button button--secondary'
                   onClick={() => setView('new')}
                 >
-                  Change difficulty
+                  {t.changeDifficulty}
                 </button>
               </div>
             </section>
           ) : (
             <>
-              <div className='tools'>
+              <div
+                className={
+                  settings.hintLimit === 0 ? 'tools tools--3' : 'tools'
+                }
+              >
                 <button
                   className='tool'
                   onClick={() => update(undo(game))}
                   disabled={paused || !game.history.length}
                 >
                   <Icon name='undo' />
-                  Undo
+                  {t.undo}
                 </button>
                 <button className='tool' onClick={clear} disabled={paused}>
                   <Icon name='erase' />
-                  Erase
+                  {t.erase}
                 </button>
                 <button
                   className={notesMode ? 'tool tool--on' : 'tool'}
@@ -244,12 +261,18 @@ export default function App() {
                   disabled={paused}
                 >
                   <Icon name='notes' />
-                  Notes {notesMode ? 'on' : 'off'}
+                  {t.notes}
                 </button>
-                <button className='tool' onClick={showHint} disabled={paused}>
-                  <Icon name='hint' />
-                  Hint
-                </button>
+                {settings.hintLimit !== 0 && (
+                  <button
+                    className='tool'
+                    onClick={showHint}
+                    disabled={paused || left <= 0}
+                  >
+                    <Icon name='hint' />
+                    {left === Infinity ? t.hint : `${t.hint} (${left})`}
+                  </button>
+                )}
               </div>
 
               <div className={notesMode ? 'pad pad--notes' : 'pad'}>
@@ -273,7 +296,7 @@ export default function App() {
       )}
 
       <footer className='footer'>
-        <a href='https://github.com/mardesnic/des-sudoku'>Source</a>
+        <a href='https://github.com/mardesnic/des-sudoku'>{t.source}</a>
       </footer>
     </main>
   );
@@ -285,6 +308,3 @@ const MOVES: Record<string, [number, number]> = {
   ArrowLeft: [0, -1],
   ArrowRight: [0, 1],
 };
-
-const summary = (n: number, word: string) =>
-  n === 0 ? `No ${word}s` : `${n} ${word}${n === 1 ? '' : 's'}`;

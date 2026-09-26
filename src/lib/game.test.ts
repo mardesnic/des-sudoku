@@ -5,6 +5,7 @@ import {
   enter,
   erase,
   hint,
+  hintsLeft,
   initialSettings,
   initialStats,
   newGame,
@@ -23,6 +24,7 @@ import {
   rate,
   solve,
 } from './sudoku';
+import { STRINGS } from './i18n';
 
 // Deterministic stand-in for Math.random.
 function seeded(seed = 1) {
@@ -169,5 +171,38 @@ describe('game', () => {
       }
     );
     expect(stats.medium).toEqual({ solved: 2, best: 60_000, total: 150_000 });
+  });
+});
+
+describe('hint limit', () => {
+  it('counts down the hints left, or never runs out', () => {
+    const [game] = hint(newGame(puzzles.easy));
+    expect(hintsLeft(game, 5)).toBe(4);
+    expect(hintsLeft({ ...game, hints: 7 }, 5)).toBe(0);
+    expect(hintsLeft(game, 0)).toBe(0);
+    expect(hintsLeft(game, null)).toBe(Infinity);
+  });
+});
+
+describe('translations', () => {
+  it('has every string in Croatian', () => {
+    expect(Object.keys(STRINGS.hr).sort()).toEqual(
+      Object.keys(STRINGS.en).sort()
+    );
+  });
+
+  it('uses the Croatian plural forms', () => {
+    const { mistakes, hintsUsed } = STRINGS.hr;
+    expect([1, 2, 5, 11, 21, 22, 25].map(mistakes)).toEqual([
+      '1 greška',
+      '2 greške',
+      '5 grešaka',
+      '11 grešaka',
+      '21 greška',
+      '22 greške',
+      '25 grešaka',
+    ]);
+    expect(hintsUsed(3)).toBe('3 savjeta');
+    expect(STRINGS.en.mistakes(1)).toBe('1 mistake');
   });
 });
