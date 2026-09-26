@@ -156,12 +156,13 @@ export default function App() {
         </div>
       </header>
 
-      {view === 'new' && <NewGame stats={stats} onStart={start} t={t} />}
+      {view === 'new' && <NewGame onStart={start} t={t} />}
       {view === 'settings' && (
         <SettingsView
           settings={settings}
           setSettings={setSettings}
           stats={stats}
+          onResetStats={() => setStats(initialStats)}
           t={t}
         />
       )}

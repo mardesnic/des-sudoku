@@ -1,14 +1,14 @@
+import { useState } from 'react';
+
 import { formatTime } from '../lib/format';
 import { HINT_LIMITS, type Settings, type Stats } from '../lib/game';
 import { LANG_NAMES, LANGS, type Language, type Strings } from '../lib/i18n';
 import { DIFFICULTIES, type Difficulty } from '../lib/sudoku';
 
 export function NewGame({
-  stats,
   onStart,
   t,
 }: {
-  stats: Stats;
   onStart: (d: Difficulty) => void;
   t: Strings;
 }) {
@@ -19,11 +19,7 @@ export function NewGame({
         {DIFFICULTIES.map((d) => (
           <button key={d} className='level' onClick={() => onStart(d)}>
             <span>{t.levels[d]}</span>
-            <span className='muted'>
-              {stats[d].best === undefined
-                ? t.descriptions[d]
-                : t.best(formatTime(stats[d].best))}
-            </span>
+            <span className='muted'>{t.descriptions[d]}</span>
           </button>
         ))}
       </div>
@@ -37,13 +33,18 @@ export function SettingsView({
   settings,
   setSettings,
   stats,
+  onResetStats,
   t,
 }: {
   settings: Settings;
   setSettings: (s: Settings) => void;
   stats: Stats;
+  onResetStats: () => void;
   t: Strings;
 }) {
+  const [confirming, setConfirming] = useState(false);
+  const hasStats = DIFFICULTIES.some((d) => stats[d].solved > 0);
+
   const toggle = (key: Toggle, label: string, detail: string) => (
     <label className='check'>
       <input
@@ -128,6 +129,36 @@ export function SettingsView({
             })}
           </tbody>
         </table>
+        {hasStats &&
+          (confirming ? (
+            <div className='reset'>
+              <span>{t.resetConfirm}</span>
+              <button
+                className='button button--small button--danger'
+                onClick={() => {
+                  onResetStats();
+                  setConfirming(false);
+                }}
+              >
+                {t.reset}
+              </button>
+              <button
+                className='button button--small'
+                onClick={() => setConfirming(false)}
+              >
+                {t.cancel}
+              </button>
+            </div>
+          ) : (
+            <div className='reset'>
+              <button
+                className='button button--small'
+                onClick={() => setConfirming(true)}
+              >
+                {t.resetStats}
+              </button>
+            </div>
+          ))}
       </section>
     </>
   );

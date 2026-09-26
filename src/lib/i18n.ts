@@ -40,7 +40,6 @@ const en = {
     hard: 'Needs a few tricks',
     expert: 'Needs pairs and X-wings',
   } as Record<Difficulty, string>,
-  best: (time: string) => `Best ${time}`,
   mistakes: (n: number) =>
     count('en', n, { one: 'mistake', other: 'mistakes' }),
   noMistakes: 'No mistakes',
@@ -79,6 +78,9 @@ const en = {
   solvedColumn: 'Solved',
   bestColumn: 'Best',
   average: 'Average',
+  resetStats: 'Reset statistics',
+  resetConfirm: 'Clear all times and counts?',
+  reset: 'Reset',
 };
 
 export type Strings = typeof en;
@@ -100,7 +102,6 @@ const hr: Strings = {
     hard: 'Treba nekoliko trikova',
     expert: 'Trebaju parovi i X-wing',
   },
-  best: (time) => `Najbolje ${time}`,
   mistakes: (n) =>
     count('hr', n, { one: 'greška', few: 'greške', other: 'grešaka' }),
   noMistakes: 'Bez grešaka',
@@ -140,6 +141,9 @@ const hr: Strings = {
   solvedColumn: 'Riješeno',
   bestColumn: 'Najbolje',
   average: 'Prosjek',
+  resetStats: 'Poništi statistiku',
+  resetConfirm: 'Obrisati sva vremena i brojeve?',
+  reset: 'Obriši',
 };
 
 export const STRINGS: Record<Lang, Strings> = { en, hr };
