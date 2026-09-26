@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/des-sudoku/sw.js', { scope: '/des-sudoku/' })})}
