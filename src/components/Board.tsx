@@ -1,4 +1,4 @@
-import { box, col, row } from '../lib/sudoku';
+import { box, col, digits, row } from '../lib/sudoku';
 import { isGiven, type Game } from '../lib/game';
 import type { Strings } from '../lib/i18n';
 
@@ -19,7 +19,7 @@ const cellsOf = (b: number) =>
   );
 
 export function Board({ game, selected, onSelect, t }: Props) {
-  const { values, solution } = game;
+  const { values, notes, solution } = game;
   const digit = selected === undefined ? 0 : values[selected];
 
   const cellClass = (i: number) => {
@@ -54,7 +54,20 @@ export function Board({ game, selected, onSelect, t }: Props) {
                 values[i] ? `, ${values[i]}` : ''
               }`}
             >
-              {values[i] || null}
+              {values[i] ? (
+                values[i]
+              ) : notes[i] ? (
+                <span className='notes'>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+                    <span
+                      key={d}
+                      className={d === digit ? 'note note--same' : 'note'}
+                    >
+                      {digits(notes[i]).includes(d) ? d : ''}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>

@@ -10,6 +10,7 @@ import {
   newGame,
   placed,
   recordWin,
+  toggleNote,
   undo,
   type Game,
 } from './game';
@@ -17,6 +18,7 @@ import {
   DIFFICULTIES,
   PEERS,
   UNITS,
+  bit,
   generate,
   isUnique,
   rate,
@@ -136,6 +138,45 @@ describe('game', () => {
       expect(counts[d]).toBe(game.givens.filter((v) => v === d).length);
     }
     expect(placed(game.solution).slice(1)).toEqual(new Array(9).fill(9));
+  });
+
+  it('toggles notes, and a note replaces an entry', () => {
+    let game = start();
+    const i = open(game);
+    game = toggleNote(game, i, 2);
+    game = toggleNote(game, i, 7);
+    expect(game.notes[i]).toBe(bit(2) | bit(7));
+    game = toggleNote(game, i, 2);
+    expect(game.notes[i]).toBe(bit(7));
+    game = enter(game, i, 5);
+    expect(game.notes[i]).toBe(0);
+    game = toggleNote(game, i, 3);
+    expect(game.values[i]).toBe(0);
+    expect(game.notes[i]).toBe(bit(3));
+  });
+
+  it('clears notes in the row, column and box, and undoes it all', () => {
+    let game = start();
+    const i = open(game);
+    const d = game.solution[i];
+    const peer = PEERS[i].find((p) => !game.givens[p])!;
+    game = toggleNote(game, peer, d);
+    expect(game.notes[peer]).toBe(bit(d));
+
+    game = enter(game, i, d);
+    expect(game.notes[peer]).toBe(0);
+    game = undo(game);
+    expect(game.values[i]).toBe(0);
+    expect(game.notes[peer]).toBe(bit(d));
+    game = undo(game);
+    expect(game.notes[peer]).toBe(0);
+    expect(game.history).toHaveLength(0);
+  });
+
+  it('leaves notes on givens alone', () => {
+    const game = start();
+    const given = game.givens.findIndex(Boolean);
+    expect(toggleNote(game, given, 1)).toBe(game);
   });
 
   it('undoes moves one at a time', () => {

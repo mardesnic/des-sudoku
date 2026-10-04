@@ -15,6 +15,7 @@ import {
   newGame,
   placed,
   recordWin,
+  toggleNote,
   undo,
   type Game,
   type Settings,
@@ -28,7 +29,12 @@ import { useWakeLock } from './lib/use-wake-lock';
 type View = 'play' | 'new' | 'settings';
 
 export default function App() {
-  const [{ game }, setStore] = useStoredState<{ game?: Game }>('sudoku', {});
+  const [store, setStore] = useStoredState<{ game?: Game }>('sudoku', {});
+  // Games saved while the app had no notes come back without them.
+  const game = store.game && {
+    ...store.game,
+    notes: store.game.notes ?? new Array(81).fill(0),
+  };
   const [settings, setSettings] = useStoredState<Settings>(
     'sudoku-settings',
     initialSettings
@@ -36,6 +42,7 @@ export default function App() {
   const [stats, setStats] = useStoredState<Stats>('sudoku-stats', initialStats);
   const [view, setView] = useState<View>(game ? 'play' : 'new');
   const [selected, setSelected] = useState<number>();
+  const [notesMode, setNotesMode] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   useWakeLock();
 
@@ -71,12 +78,15 @@ export default function App() {
   const start = (difficulty: Difficulty) => {
     setStore({ game: newGame(generate(difficulty, Math.random)) });
     setSelected(undefined);
+    setNotesMode(false);
     setView('play');
   };
 
   const input = (d: number) => {
     if (!game || selected === undefined) return;
-    update(enter(game, selected, d));
+    update(
+      notesMode ? toggleNote(game, selected, d) : enter(game, selected, d)
+    );
   };
 
   const clear = () => {
@@ -93,7 +103,7 @@ export default function App() {
     if (i !== undefined) setSelected(i);
   };
 
-  // Keyboard play for computers: digits, arrows, Backspace.
+  // Keyboard play for computers: digits, arrows, Backspace, N for notes.
   useEffect(() => {
     if (!playing) return;
     const onKey = (e: KeyboardEvent) => {
@@ -116,6 +126,8 @@ export default function App() {
         input(Number(key));
       } else if (key === 'backspace' || key === 'delete' || key === '0') {
         clear();
+      } else if (key === 'n') {
+        setNotesMode((n) => !n);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -206,7 +218,7 @@ export default function App() {
             </section>
           ) : (
             <>
-              <div className={limit === 0 ? 'tools tools--2' : 'tools'}>
+              <div className={limit === 0 ? 'tools tools--3' : 'tools'}>
                 <button
                   className='tool'
                   onClick={() => update(undo(game))}
@@ -218,6 +230,14 @@ export default function App() {
                 <button className='tool' onClick={clear}>
                   <Icon name='erase' />
                   {t.erase}
+                </button>
+                <button
+                  className={notesMode ? 'tool tool--on' : 'tool'}
+                  onClick={() => setNotesMode(!notesMode)}
+                  aria-pressed={notesMode}
+                >
+                  <Icon name='notes' />
+                  {t.notes}
                 </button>
                 {limit !== 0 && (
                   <button
@@ -231,13 +251,13 @@ export default function App() {
                 )}
               </div>
 
-              <div className='pad'>
+              <div className={notesMode ? 'pad pad--notes' : 'pad'}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
                   <button
                     key={d}
                     className='pad__key'
                     onClick={() => input(d)}
-                    disabled={counts[d] >= 9}
+                    disabled={counts[d] >= 9 && !notesMode}
                   >
                     {d}
                     <span className='pad__left'>

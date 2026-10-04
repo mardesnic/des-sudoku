@@ -15,9 +15,10 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 - Highlights the row, column, box and matching numbers of the selected cell
 - Mistakes shown in red
 - Hints that fill in the easiest cell to work out next: 5 per game by default, or 3, 10, unlimited or off (none on hard and expert)
+- Notes (pencil marks), tidied away from the row, column and box when you enter a number
 - Undo, erase, and a count of how many of each number are left
 - A count of puzzles solved at each level
-- Keyboard play on a computer: digits, arrow keys, Backspace, Ctrl+Z to undo
+- Keyboard play on a computer: digits, arrow keys, Backspace, N for notes, Ctrl+Z to undo
 - Picks up where you left off after a reload
 - Keeps the screen on while you play
 - In English and Croatian, following the phone's language unless you pick one

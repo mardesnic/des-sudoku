@@ -1,6 +1,8 @@
 import type { Language } from './i18n';
 import {
+  PEERS,
   UNITS,
+  bit,
   candidates,
   digits,
   has,
@@ -10,10 +12,11 @@ import {
 } from './sudoku';
 
 // What a cell held before a move, so the move can be undone.
-type Change = { i: number; value: number };
+type Change = { i: number; value: number; notes: number };
 
 export type Game = Puzzle & {
   values: Grid; // givens plus the player's entries
+  notes: number[]; // pencil marks as digit bitmasks
   history: Change[][];
   mistakes: number;
   hints: number;
@@ -56,6 +59,7 @@ export const initialStats: Stats = {
 export const newGame = (puzzle: Puzzle): Game => ({
   ...puzzle,
   values: [...puzzle.givens],
+  notes: new Array(81).fill(0),
   history: [],
   mistakes: 0,
   hints: 0,
@@ -64,36 +68,80 @@ export const newGame = (puzzle: Puzzle): Game => ({
 
 export const isGiven = (game: Game, i: number) => game.givens[i] !== 0;
 
-// Sets a cell as one undoable move.
-function apply(game: Game, i: number, value: number): Game {
-  if (game.values[i] === value) return game;
+// Applies cell updates as one undoable move.
+function apply(
+  game: Game,
+  updates: { i: number; value?: number; notes?: number }[]
+): Game {
   const values = [...game.values];
-  const change: Change = { i, value: values[i] };
-  values[i] = value;
-  const solved = values.every((v, j) => v === game.solution[j]);
-  return { ...game, values, history: [...game.history, [change]], solved };
+  const notes = [...game.notes];
+  const changes: Change[] = [];
+  for (const u of updates) {
+    const value = u.value ?? values[u.i];
+    const note = u.notes ?? notes[u.i];
+    if (value === values[u.i] && note === notes[u.i]) continue;
+    changes.push({ i: u.i, value: values[u.i], notes: notes[u.i] });
+    values[u.i] = value;
+    notes[u.i] = note;
+  }
+  if (!changes.length) return game;
+  const solved = values.every((v, i) => v === game.solution[i]);
+  return {
+    ...game,
+    values,
+    notes,
+    history: [...game.history, changes],
+    solved,
+  };
+}
+
+// Puts a digit in a cell and removes it from the notes in its row,
+// column and box.
+function place(game: Game, i: number, d: number): Game {
+  const updates = [{ i, value: d, notes: 0 }];
+  for (const p of PEERS[i]) {
+    if (has(game.notes[p], d)) {
+      updates.push({
+        i: p,
+        value: game.values[p],
+        notes: game.notes[p] & ~bit(d),
+      });
+    }
+  }
+  return apply(game, updates);
 }
 
 // Puts a digit in a cell, or takes it out if it's already there.
 export function enter(game: Game, i: number, d: number): Game {
   if (game.solved || isGiven(game, i)) return game;
-  if (game.values[i] === d) return apply(game, i, 0);
-  const next = apply(game, i, d);
+  if (game.values[i] === d) return apply(game, [{ i, value: 0 }]);
+  const next = place(game, i, d);
   const wrong = d !== game.solution[i];
   return wrong ? { ...next, mistakes: next.mistakes + 1 } : next;
 }
 
+export function toggleNote(game: Game, i: number, d: number): Game {
+  if (game.solved || isGiven(game, i)) return game;
+  // A pencil mark replaces an entry, like writing over it.
+  const notes = game.values[i] ? bit(d) : game.notes[i] ^ bit(d);
+  return apply(game, [{ i, value: 0, notes }]);
+}
+
 export function erase(game: Game, i: number): Game {
   if (game.solved || isGiven(game, i)) return game;
-  return apply(game, i, 0);
+  return apply(game, [{ i, value: 0, notes: 0 }]);
 }
 
 export function undo(game: Game): Game {
   const last = game.history.at(-1);
   if (!last || game.solved) return game;
   const values = [...game.values];
-  for (const c of last) values[c.i] = c.value;
-  return { ...game, values, history: game.history.slice(0, -1) };
+  const notes = [...game.notes];
+  for (const c of last) {
+    values[c.i] = c.value;
+    notes[c.i] = c.notes ?? 0; // moves saved before notes came back have none
+  }
+  return { ...game, values, notes, history: game.history.slice(0, -1) };
 }
 
 // The cell to reveal for a hint: the selected cell when it's empty or
@@ -124,7 +172,7 @@ export function hint(game: Game, selected?: number): [Game, number?] {
   if (game.solved) return [game];
   const i = hintCell(game, selected);
   if (i === undefined) return [game];
-  const next = apply(game, i, game.solution[i]);
+  const next = place(game, i, game.solution[i]);
   return [{ ...next, hints: next.hints + 1 }, i];
 }
 

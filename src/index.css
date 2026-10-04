@@ -61,9 +61,9 @@
   --line: #1c4f93;
   --line-thin: #c9e3f4;
   /* Cells are see-through so the narwhal shows behind the board. */
-  --cell: rgb(247 252 255 / 0.72);
-  --peer: rgb(228 245 253 / 0.8);
-  --same: rgb(191 233 252 / 0.85);
+  --cell: rgb(247 252 255 / 0.8);
+  --peer: rgb(228 245 253 / 0.86);
+  --same: rgb(191 233 252 / 0.9);
   --selected: rgb(167 243 208 / 0.9);
   --wrong: #d9472f;
   --wrong-bg: rgb(255 226 218 / 0.85);
@@ -337,16 +337,37 @@ h2 {
   background: var(--wrong-bg);
 }
 
+.notes {
+  display: grid;
+  grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+}
+
+.note {
+  display: grid;
+  place-items: center;
+  font-size: 2.6cqw;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.note--same {
+  color: var(--accent);
+  font-weight: 800;
+}
+
 /* Tools and number pad */
 
 .tools {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
-.tools--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.tools--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .tool {
@@ -364,6 +385,12 @@ h2 {
 
 .tool:disabled {
   opacity: 0.4;
+}
+
+.tool--on,
+[data-theme='narwhal'] .tool--on {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .pad {
@@ -392,6 +419,13 @@ h2 {
 
 .pad__key:disabled {
   opacity: 0.3;
+}
+
+.pad--notes .pad__key {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding-top: 14px;
+  color: var(--muted);
 }
 
 .pad__left {
