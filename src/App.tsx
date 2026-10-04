@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 
 import { Board } from './components/Board';
+import { Confetti } from './components/Confetti';
 import { Icon } from './components/Icon';
 import { NewGame, SettingsView } from './components/Menu';
-import { formatTime } from './lib/format';
 import {
   enter,
   erase,
   hint,
+  hintLimitFor,
   hintsLeft,
   initialSettings,
   initialStats,
   newGame,
   placed,
   recordWin,
-  toggleNote,
   undo,
   type Game,
   type Settings,
@@ -23,8 +23,7 @@ import {
 import { STRINGS, detectLang } from './lib/i18n';
 import { generate, type Difficulty } from './lib/sudoku';
 import { useStoredState } from './lib/use-stored-state';
-import { useTicker } from './lib/use-ticker';
-import { useVisible } from './lib/use-visible';
+import { useWakeLock } from './lib/use-wake-lock';
 
 type View = 'play' | 'new' | 'settings';
 
@@ -37,9 +36,8 @@ export default function App() {
   const [stats, setStats] = useStoredState<Stats>('sudoku-stats', initialStats);
   const [view, setView] = useState<View>(game ? 'play' : 'new');
   const [selected, setSelected] = useState<number>();
-  const [notesMode, setNotesMode] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const visible = useVisible();
+  const [celebrating, setCelebrating] = useState(false);
+  useWakeLock();
 
   const lang = settings.language === 'auto' ? detectLang() : settings.language;
   const t = STRINGS[lang];
@@ -47,41 +45,46 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme;
+    // Tint the phone's status bar to match the theme's backdrop.
+    for (const meta of document.querySelectorAll<HTMLMetaElement>(
+      'meta[name=theme-color]'
+    )) {
+      meta.dataset.default ??= meta.content;
+      meta.content =
+        settings.theme === 'narwhal' ? '#6fe6fc' : meta.dataset.default;
+    }
+  }, [settings.theme]);
+
   const playing = view === 'play' && !!game && !game.solved;
-  useTicker(playing && !paused && visible, (ms) =>
-    setStore((s) =>
-      s.game ? { game: { ...s.game, elapsed: s.game.elapsed + ms } } : s
-    )
-  );
 
   const update = (next: Game) => {
     if (!game || next === game) return;
-    if (next.solved && !game.solved) setStats(recordWin(stats, next));
+    if (next.solved && !game.solved) {
+      setStats(recordWin(stats, next));
+      setCelebrating(true);
+    }
     setStore({ game: next });
   };
 
   const start = (difficulty: Difficulty) => {
     setStore({ game: newGame(generate(difficulty, Math.random)) });
     setSelected(undefined);
-    setNotesMode(false);
-    setPaused(false);
     setView('play');
   };
 
   const input = (d: number) => {
     if (!game || selected === undefined) return;
-    update(
-      notesMode
-        ? toggleNote(game, selected, d)
-        : enter(game, selected, d, settings)
-    );
+    update(enter(game, selected, d));
   };
 
   const clear = () => {
     if (game && selected !== undefined) update(erase(game, selected));
   };
 
-  const left = game ? hintsLeft(game, settings.hintLimit) : 0;
+  const limit = game ? hintLimitFor(game.difficulty, settings.hintLimit) : 0;
+  const left = game ? hintsLeft(game, limit) : 0;
 
   const showHint = () => {
     if (!game || left <= 0) return;
@@ -90,9 +93,9 @@ export default function App() {
     if (i !== undefined) setSelected(i);
   };
 
-  // Keyboard play for computers: digits, arrows, Backspace, N for notes.
+  // Keyboard play for computers: digits, arrows, Backspace.
   useEffect(() => {
-    if (!playing || paused) return;
+    if (!playing) return;
     const onKey = (e: KeyboardEvent) => {
       if (!game || e.altKey) return;
       const key = e.key.toLowerCase();
@@ -113,8 +116,6 @@ export default function App() {
         input(Number(key));
       } else if (key === 'backspace' || key === 'delete' || key === '0') {
         clear();
-      } else if (key === 'n') {
-        setNotesMode((n) => !n);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -162,7 +163,6 @@ export default function App() {
           settings={settings}
           setSettings={setSettings}
           stats={stats}
-          onResetStats={() => setStats(initialStats)}
           t={t}
         />
       )}
@@ -171,52 +171,20 @@ export default function App() {
         <>
           <div className='status'>
             <span>{t.levels[game.difficulty]}</span>
-            {settings.showMistakes && (
-              <span className='muted'>{t.mistakes(game.mistakes)}</span>
-            )}
-            <span className='status__time'>
-              {settings.showTimer && formatTime(game.elapsed)}
-              {!game.solved && (
-                <button
-                  className='icon-button'
-                  onClick={() => setPaused(!paused)}
-                  aria-label={paused ? t.resume : t.pause}
-                >
-                  <Icon name={paused ? 'play' : 'pause'} />
-                </button>
-              )}
-            </span>
+            <span className='muted'>{t.mistakes(game.mistakes)}</span>
           </div>
 
-          <div className='board-wrap'>
-            <Board
-              game={game}
-              selected={game.solved ? undefined : selected}
-              showMistakes={settings.showMistakes}
-              paused={paused}
-              onSelect={setSelected}
-              t={t}
-            />
-            {paused && (
-              <button className='paused' onClick={() => setPaused(false)}>
-                <Icon name='play' />
-                {t.paused}
-              </button>
-            )}
-          </div>
+          <Board
+            game={game}
+            selected={game.solved ? undefined : selected}
+            onSelect={setSelected}
+            t={t}
+          />
 
           {game.solved ? (
             <section className='card solved'>
               <h2>{t.solved}</h2>
-              <p>
-                {t.solvedIn(
-                  t.levels[game.difficulty],
-                  formatTime(game.elapsed)
-                )}
-                {stats[game.difficulty].best === game.elapsed &&
-                  stats[game.difficulty].solved > 1 &&
-                  t.newBest}
-              </p>
+              <p>{t.levels[game.difficulty]}</p>
               <p className='muted'>
                 {game.mistakes ? t.mistakes(game.mistakes) : t.noMistakes} ·{' '}
                 {game.hints ? t.hintsUsed(game.hints) : t.noHints}
@@ -238,51 +206,38 @@ export default function App() {
             </section>
           ) : (
             <>
-              <div
-                className={
-                  settings.hintLimit === 0 ? 'tools tools--3' : 'tools'
-                }
-              >
+              <div className={limit === 0 ? 'tools tools--2' : 'tools'}>
                 <button
                   className='tool'
                   onClick={() => update(undo(game))}
-                  disabled={paused || !game.history.length}
+                  disabled={!game.history.length}
                 >
                   <Icon name='undo' />
                   {t.undo}
                 </button>
-                <button className='tool' onClick={clear} disabled={paused}>
+                <button className='tool' onClick={clear}>
                   <Icon name='erase' />
                   {t.erase}
                 </button>
-                <button
-                  className={notesMode ? 'tool tool--on' : 'tool'}
-                  onClick={() => setNotesMode(!notesMode)}
-                  aria-pressed={notesMode}
-                  disabled={paused}
-                >
-                  <Icon name='notes' />
-                  {t.notes}
-                </button>
-                {settings.hintLimit !== 0 && (
+                {limit !== 0 && (
                   <button
                     className='tool'
                     onClick={showHint}
-                    disabled={paused || left <= 0}
+                    disabled={left <= 0}
                   >
                     <Icon name='hint' />
-                    {left === Infinity ? t.hint : `${t.hint} (${left})`}
+                    {t.hint} ({left === Infinity ? '∞' : left})
                   </button>
                 )}
               </div>
 
-              <div className={notesMode ? 'pad pad--notes' : 'pad'}>
+              <div className='pad'>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
                   <button
                     key={d}
                     className='pad__key'
                     onClick={() => input(d)}
-                    disabled={paused || (counts[d] >= 9 && !notesMode)}
+                    disabled={counts[d] >= 9}
                   >
                     {d}
                     <span className='pad__left'>
@@ -299,6 +254,7 @@ export default function App() {
       <footer className='footer'>
         <a href='https://github.com/mardesnic/des-sudoku'>{t.source}</a>
       </footer>
+      {celebrating && <Confetti onDone={() => setCelebrating(false)} />}
     </main>
   );
 }

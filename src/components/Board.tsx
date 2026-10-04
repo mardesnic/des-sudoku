@@ -1,12 +1,10 @@
-import { box, col, digits, row } from '../lib/sudoku';
-import { conflicts, isGiven, type Game } from '../lib/game';
+import { box, col, row } from '../lib/sudoku';
+import { isGiven, type Game } from '../lib/game';
 import type { Strings } from '../lib/i18n';
 
 type Props = {
   game: Game;
   selected?: number;
-  showMistakes: boolean;
-  paused: boolean;
   onSelect: (i: number) => void;
   t: Strings;
 };
@@ -20,16 +18,8 @@ const cellsOf = (b: number) =>
       (Math.floor(b / 3) * 3 + Math.floor(k / 3)) * 9 + (b % 3) * 3 + (k % 3)
   );
 
-export function Board({
-  game,
-  selected,
-  showMistakes,
-  paused,
-  onSelect,
-  t,
-}: Props) {
-  const { values, notes, solution } = game;
-  const clashes = conflicts(values);
+export function Board({ game, selected, onSelect, t }: Props) {
+  const { values, solution } = game;
   const digit = selected === undefined ? 0 : values[selected];
 
   const cellClass = (i: number) => {
@@ -37,9 +27,7 @@ export function Board({
     const v = values[i];
     if (isGiven(game, i)) classes.push('cell--given');
     else if (v) classes.push('cell--entry');
-    if (v && (showMistakes ? v !== solution[i] : clashes.has(i))) {
-      classes.push('cell--wrong');
-    }
+    if (v && v !== solution[i]) classes.push('cell--wrong');
     if (i === selected) classes.push('cell--selected');
     else if (digit && v === digit) classes.push('cell--same');
     else if (
@@ -54,7 +42,7 @@ export function Board({
   };
 
   return (
-    <div className={paused ? 'board board--paused' : 'board'} role='grid'>
+    <div className='board' role='grid'>
       {BOXES.map((b) => (
         <div key={b} className='board__box'>
           {cellsOf(b).map((i) => (
@@ -62,25 +50,11 @@ export function Board({
               key={i}
               className={cellClass(i)}
               onClick={() => onSelect(i)}
-              disabled={paused}
               aria-label={`${t.cell(row(i) + 1, col(i) + 1)}${
                 values[i] ? `, ${values[i]}` : ''
               }`}
             >
-              {paused ? null : values[i] ? (
-                values[i]
-              ) : notes[i] ? (
-                <span className='notes'>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-                    <span
-                      key={d}
-                      className={d === digit ? 'note note--same' : 'note'}
-                    >
-                      {digits(notes[i]).includes(d) ? d : ''}
-                    </span>
-                  ))}
-                </span>
-              ) : null}
+              {values[i] || null}
             </button>
           ))}
         </div>

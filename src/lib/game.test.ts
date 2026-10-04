@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  conflicts,
   enter,
   erase,
   hint,
+  hintLimitFor,
   hintsLeft,
-  initialSettings,
   initialStats,
   newGame,
+  placed,
   recordWin,
-  toggleNote,
   undo,
   type Game,
 } from './game';
@@ -18,7 +17,6 @@ import {
   DIFFICULTIES,
   PEERS,
   UNITS,
-  bit,
   generate,
   isUnique,
   rate,
@@ -84,16 +82,16 @@ describe('game', () => {
   it('enters and removes a digit', () => {
     let game = start();
     const i = open(game);
-    game = enter(game, i, 5, initialSettings);
+    game = enter(game, i, 5);
     expect(game.values[i]).toBe(5);
-    game = enter(game, i, 5, initialSettings);
+    game = enter(game, i, 5);
     expect(game.values[i]).toBe(0);
   });
 
   it('leaves the given numbers alone', () => {
     const game = start();
     const given = game.givens.findIndex(Boolean);
-    expect(enter(game, given, 1, initialSettings)).toBe(game);
+    expect(enter(game, given, 1)).toBe(game);
     expect(erase(game, given)).toBe(game);
   });
 
@@ -101,46 +99,55 @@ describe('game', () => {
     let game = start();
     const i = open(game);
     const wrong = (game.solution[i] % 9) + 1;
-    game = enter(game, i, wrong, initialSettings);
+    game = enter(game, i, wrong);
     expect(game.mistakes).toBe(1);
-    game = enter(game, i, game.solution[i], initialSettings);
+    game = enter(game, i, game.solution[i]);
     expect(game.mistakes).toBe(1);
   });
 
-  it('clears notes in the row, column and box, and undoes it all', () => {
+  it('starts with only the givens and no history', () => {
+    const game = start();
+    expect(game.values).toEqual(game.givens);
+    expect(game.history).toEqual([]);
+    expect(game.solved).toBe(false);
+  });
+
+  it('erases an entry as an undoable move', () => {
     let game = start();
     const i = open(game);
-    const d = game.solution[i];
-    const peer = PEERS[i].find((p) => !game.givens[p])!;
-    game = toggleNote(game, peer, d);
-    expect(game.notes[peer]).toBe(bit(d));
+    game = erase(game, i);
+    expect(game.history).toHaveLength(0);
+    game = enter(game, i, 3);
+    game = erase(game, i);
+    expect(game.values[i]).toBe(0);
+    game = undo(game);
+    expect(game.values[i]).toBe(3);
+  });
 
-    game = enter(game, i, d, initialSettings);
-    expect(game.notes[peer]).toBe(0);
+  it('does nothing to undo at the start', () => {
+    const game = start();
+    expect(undo(game)).toBe(game);
+  });
+
+  it('counts how many of each digit are placed', () => {
+    const game = start();
+    const counts = placed(game.values);
+    for (let d = 1; d <= 9; d++) {
+      expect(counts[d]).toBe(game.givens.filter((v) => v === d).length);
+    }
+    expect(placed(game.solution).slice(1)).toEqual(new Array(9).fill(9));
+  });
+
+  it('undoes moves one at a time', () => {
+    let game = start();
+    const i = open(game);
+    game = enter(game, i, 4);
+    game = enter(game, i, 7);
+    game = undo(game);
+    expect(game.values[i]).toBe(4);
     game = undo(game);
     expect(game.values[i]).toBe(0);
-    expect(game.notes[peer]).toBe(bit(d));
-    game = undo(game);
-    expect(game.notes[peer]).toBe(0);
     expect(game.history).toHaveLength(0);
-  });
-
-  it('keeps notes when tidying is off', () => {
-    let game = start();
-    const i = open(game);
-    const d = game.solution[i];
-    const peer = PEERS[i].find((p) => !game.givens[p])!;
-    game = toggleNote(game, peer, d);
-    game = enter(game, i, d, { ...initialSettings, autoNotes: false });
-    expect(game.notes[peer]).toBe(bit(d));
-  });
-
-  it('finds repeated digits', () => {
-    let game = start();
-    const i = open(game);
-    const given = PEERS[i].find((p) => game.givens[p])!;
-    game = enter(game, i, game.givens[given], initialSettings);
-    expect(conflicts(game.values)).toEqual(new Set([i, given]));
   });
 
   it('hints the selected cell, then cells that can be worked out', () => {
@@ -157,20 +164,38 @@ describe('game', () => {
     expect(game.values[cell!]).toBe(game.solution[cell!]);
   });
 
-  it('is solved when every cell is right, and records the time', () => {
+  it('is solved when every cell is right, and counts the win', () => {
     let game = start();
     for (let n = 0; n < 81 && !game.solved; n++) [game] = hint(game);
     expect(game.solved).toBe(true);
     expect(game.values).toEqual(game.solution);
 
-    const stats = recordWin(
-      recordWin(initialStats, { ...game, elapsed: 90_000 }),
-      {
-        ...game,
-        elapsed: 60_000,
-      }
-    );
-    expect(stats.medium).toEqual({ solved: 2, best: 60_000, total: 150_000 });
+    const stats = recordWin(recordWin(initialStats, game), game);
+    expect(stats.medium).toEqual({ solved: 2 });
+    expect(stats.easy).toEqual({ solved: 0 });
+  });
+
+  it('locks the board once solved', () => {
+    let game = start();
+    for (let n = 0; n < 81 && !game.solved; n++) [game] = hint(game);
+    const i = open(game);
+    expect(enter(game, i, (game.solution[i] % 9) + 1)).toBe(game);
+    expect(erase(game, i)).toBe(game);
+    expect(undo(game)).toBe(game);
+    expect(hint(game)).toEqual([game]);
+  });
+
+  it('becomes solved by entering the last digit', () => {
+    const base = start();
+    const i = open(base);
+    let game: Game = {
+      ...base,
+      values: base.solution.map((v, j) => (j === i ? 0 : v)),
+    };
+    game = enter(game, i, (game.solution[i] % 9) + 1);
+    expect(game.solved).toBe(false);
+    game = enter(game, i, game.solution[i]);
+    expect(game.solved).toBe(true);
   });
 });
 
@@ -181,6 +206,13 @@ describe('hint limit', () => {
     expect(hintsLeft({ ...game, hints: 7 }, 5)).toBe(0);
     expect(hintsLeft(game, 0)).toBe(0);
     expect(hintsLeft(game, null)).toBe(Infinity);
+  });
+
+  it('gives no hints on hard and expert puzzles', () => {
+    expect(hintLimitFor('easy', 5)).toBe(5);
+    expect(hintLimitFor('medium', null)).toBe(null);
+    expect(hintLimitFor('hard', 5)).toBe(0);
+    expect(hintLimitFor('expert', null)).toBe(0);
   });
 });
 

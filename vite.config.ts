@@ -11,6 +11,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       pwaAssets: { config: true },
+      // Precache theme backgrounds too, so they work offline.
+      workbox: { globPatterns: ['**/*.{js,wasm,css,html,webp}'] },
       manifest: {
         name: 'Sudoku',
         short_name: 'Sudoku',
