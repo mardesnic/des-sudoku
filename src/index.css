@@ -136,7 +136,9 @@
 /* Blocks: a world built from grass and dirt blocks, with square corners
    on everything. */
 :root[data-theme='blocks'] {
-  --bg: #866043;
+  /* The dirt is drawn on body::before; --bg fills controls like the
+     settings options, so it's sand rather than dirt. */
+  --bg: #e3d3b4;
   --surface: #f3ead8;
   --text: #2b1d0e;
   --muted: #6b5640;
