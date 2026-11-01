@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 
 import { Board } from './components/Board';
 import { Confetti } from './components/Confetti';
+import { Glyph } from './components/Glyph';
 import { Icon } from './components/Icon';
 import { NewGame, SettingsView } from './components/Menu';
 import {
@@ -24,7 +25,7 @@ import {
   type Theme,
 } from './lib/game';
 import { STRINGS, detectLang } from './lib/i18n';
-import { generate, layoutOf, type Difficulty } from './lib/sudoku';
+import { generate, layoutOf, usesShapes, type Difficulty } from './lib/sudoku';
 import { useStoredState } from './lib/use-stored-state';
 import { useWakeLock } from './lib/use-wake-lock';
 
@@ -267,10 +268,13 @@ export default function App() {
                     className='pad__key'
                     onClick={() => input(d)}
                     disabled={counts[d] >= size && !notesMode}
+                    aria-label={usesShapes(size) ? t.shapes[d - 1] : undefined}
                   >
-                    {d}
+                    <Glyph value={d} size={size} />
+                    {/* Babies can't read the count, so shapes go without. */}
                     <span className='pad__left'>
-                      {Math.max(size - counts[d], 0) || ''}
+                      {!usesShapes(size) &&
+                        (Math.max(size - counts[d], 0) || '')}
                     </span>
                   </button>
                 ))}

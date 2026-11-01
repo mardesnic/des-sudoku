@@ -47,6 +47,7 @@ describe('sudoku', () => {
   it('knows each cell’s peers', () => {
     expect(layout(9).peers.every((p) => p.length === 20)).toBe(true);
     expect(layout(6).peers.every((p) => p.length === 12)).toBe(true);
+    expect(layout(4).peers.every((p) => p.length === 7)).toBe(true);
   });
 
   it('lays out 6×6 boxes 2 rows tall and 3 columns wide', () => {
@@ -54,7 +55,8 @@ describe('sudoku', () => {
     expect([0, 1, 2, 3, 6, 9, 12].map(box)).toEqual([0, 0, 0, 1, 0, 1, 2]);
   });
 
-  it('makes kids puzzles on a 6×6 board', () => {
+  it('makes baby and kids puzzles on smaller boards', () => {
+    expect(puzzles.baby.givens).toHaveLength(16);
     expect(puzzles.kids.givens).toHaveLength(36);
     expect(puzzles.easy.givens).toHaveLength(81);
   });
@@ -80,7 +82,14 @@ describe('sudoku', () => {
       expect(givens.every((v, i) => v === 0 || v === solution[i])).toBe(true);
       expect(isUnique(givens)).toBe(true);
       expect(rate(givens)).toBe(
-        { kids: 1, easy: 1, medium: 1, hard: 2, expert: 3 }[d]
+        {
+          baby: 1,
+          kids: 1,
+          easy: 1,
+          medium: 1,
+          hard: 2,
+          expert: 3,
+        }[d]
       );
     });
   }
@@ -274,6 +283,15 @@ describe('kids game', () => {
   });
 });
 
+describe('baby game', () => {
+  it('solves with hints using only digits 1–4', () => {
+    let game = newGame(puzzles.baby);
+    for (let n = 0; n < 16 && !game.solved; n++) [game] = hint(game);
+    expect(game.solved).toBe(true);
+    expect(placed(game.values).slice(1)).toEqual([4, 4, 4, 4, 0, 0, 0, 0, 0]);
+  });
+});
+
 describe('hint limit', () => {
   it('counts down the hints left, or never runs out', () => {
     const [game] = hint(newGame(puzzles.easy));
@@ -292,6 +310,11 @@ describe('hint limit', () => {
 });
 
 describe('translations', () => {
+  it('names the baby shapes in both languages', () => {
+    expect(STRINGS.en.shapes).toHaveLength(4);
+    expect(STRINGS.hr.shapes).toHaveLength(4);
+  });
+
   it('has every string in Croatian', () => {
     expect(Object.keys(STRINGS.hr).sort()).toEqual(
       Object.keys(STRINGS.en).sort()

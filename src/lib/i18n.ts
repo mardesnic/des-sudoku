@@ -30,6 +30,7 @@ const en = {
   cancel: 'Cancel',
   done: 'Done',
   levels: {
+    baby: 'Baby',
     kids: 'Kids',
     easy: 'Easy',
     medium: 'Medium',
@@ -65,6 +66,7 @@ const en = {
   } as Record<Theme, string>,
   statistics: 'Statistics',
   solvedColumn: 'Solved',
+  shapes: ['circle', 'square', 'triangle', 'star'],
 };
 
 export type Strings = typeof en;
@@ -75,6 +77,7 @@ const hr: Strings = {
   cancel: 'Odustani',
   done: 'Gotovo',
   levels: {
+    baby: 'Beba',
     kids: 'Djeca',
     easy: 'Lagano',
     medium: 'Srednje',
@@ -111,6 +114,7 @@ const hr: Strings = {
   },
   statistics: 'Statistika',
   solvedColumn: 'Riješeno',
+  shapes: ['krug', 'kvadrat', 'trokut', 'zvijezda'],
 };
 
 export const STRINGS: Record<Lang, Strings> = { en, hr };

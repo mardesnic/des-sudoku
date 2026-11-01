@@ -1,6 +1,7 @@
-import { digits, layoutOf } from '../lib/sudoku';
+import { digits, layoutOf, usesShapes } from '../lib/sudoku';
 import { isGiven, type Game } from '../lib/game';
 import type { Strings } from '../lib/i18n';
+import { Glyph } from './Glyph';
 
 type Props = {
   game: Game;
@@ -15,6 +16,7 @@ export function Board({ game, selected, onSelect, t }: Props) {
   const digit = selected === undefined ? 0 : values[selected];
   const boxes = Array.from({ length: size }, (_, b) => b);
   const noteDigits = Array.from({ length: size }, (_, k) => k + 1);
+  const name = (v: number) => (usesShapes(size) ? t.shapes[v - 1] : v);
 
   const cellClass = (i: number) => {
     const classes = ['cell'];
@@ -47,11 +49,11 @@ export function Board({ game, selected, onSelect, t }: Props) {
                 className={cellClass(i)}
                 onClick={() => onSelect(i)}
                 aria-label={`${t.cell(row(i) + 1, col(i) + 1)}${
-                  values[i] ? `, ${values[i]}` : ''
+                  values[i] ? `, ${name(values[i])}` : ''
                 }`}
               >
                 {values[i] ? (
-                  values[i]
+                  <Glyph value={values[i]} size={size} />
                 ) : notes[i] ? (
                   <span className='notes'>
                     {noteDigits.map((d) => (
@@ -59,7 +61,9 @@ export function Board({ game, selected, onSelect, t }: Props) {
                         key={d}
                         className={d === digit ? 'note note--same' : 'note'}
                       >
-                        {digits(notes[i]).includes(d) ? d : ''}
+                        {digits(notes[i]).includes(d) && (
+                          <Glyph value={d} size={size} />
+                        )}
                       </span>
                     ))}
                   </span>

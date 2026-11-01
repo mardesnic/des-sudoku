@@ -1,9 +1,11 @@
 // Grids are size × size numbers, row by row, with 0 for an empty cell:
-// 81 for the usual 9×9 board, 36 for the 6×6 kids board.
+// 81 for the usual 9×9 board, 36 for the 6×6 kids board and 16 for the
+// 4×4 baby board.
 export type Grid = number[];
 export type Random = () => number;
 
 export const DIFFICULTIES = [
+  'baby',
   'kids',
   'easy',
   'medium',
@@ -29,9 +31,9 @@ export type Layout = {
   all: number; // candidate mask with every digit set
 };
 
-// 9×9 boards have 3×3 boxes; 6×6 boards have boxes 2 rows tall and 3
-// columns wide.
-const BOX_ROWS: Record<number, number> = { 6: 2, 9: 3 };
+// 9×9 boards have 3×3 boxes, 6×6 boards have boxes 2 rows tall and 3
+// columns wide, and 4×4 boards have 2×2 boxes.
+const BOX_ROWS: Record<number, number> = { 4: 2, 6: 2, 9: 3 };
 
 const layouts = new Map<number, Layout>();
 
@@ -69,6 +71,9 @@ export function layout(size: number): Layout {
 }
 
 export const layoutOf = (grid: Grid) => layout(Math.sqrt(grid.length));
+
+// The 4×4 baby board is played with shapes instead of digits.
+export const usesShapes = (size: number) => size === 4;
 
 // Candidate sets are bitmasks: bit d is set when digit d fits.
 export const bit = (d: number) => 1 << d;
@@ -330,6 +335,7 @@ const TARGETS: Record<
   Difficulty,
   { size: number; clues: number; level: number }
 > = {
+  baby: { size: 4, clues: 8, level: 1 },
   kids: { size: 6, clues: 16, level: 1 },
   easy: { size: 9, clues: 38, level: 1 },
   medium: { size: 9, clues: 30, level: 1 },

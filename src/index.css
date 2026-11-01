@@ -328,12 +328,14 @@ h2 {
   overflow: hidden;
 }
 .board--9 .board__box:nth-child(3),
-.board--6 .board__box:nth-child(2) {
+.board--6 .board__box:nth-child(2),
+.board--4 .board__box:nth-child(2) {
   border-top-right-radius: 10px;
   overflow: hidden;
 }
 .board--9 .board__box:nth-child(7),
-.board--6 .board__box:nth-child(5) {
+.board--6 .board__box:nth-child(5),
+.board--4 .board__box:nth-child(3) {
   border-bottom-left-radius: 10px;
   overflow: hidden;
 }
@@ -359,6 +361,51 @@ h2 {
 
 .board--6 .note {
   font-size: 3.6cqw;
+}
+
+/* The 4×4 baby board: 2×2 boxes of 2×2 cells, with shapes for digits. */
+.board--4,
+.board--4 .board__box,
+.board--4 .notes {
+  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
+}
+
+.shape {
+  width: 62%;
+  height: 62%;
+}
+
+.note .shape {
+  width: 70%;
+  height: 70%;
+}
+
+.pad__key .shape {
+  width: 2rem;
+  height: 2rem;
+}
+
+.shape--1 {
+  fill: #e53935;
+}
+
+.shape--2 {
+  fill: #1e88e5;
+}
+
+.shape--3 {
+  fill: #43a047;
+}
+
+.shape--4 {
+  fill: #fbc02d;
+}
+
+/* A wrong shape keeps its color; the cell's red background marks it. */
+.cell--wrong .shape {
+  stroke: var(--wrong);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
 }
 
 .cell {
