@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 
 import { Board } from './components/Board';
 import { Confetti } from './components/Confetti';
@@ -22,7 +22,7 @@ import {
   type Stats,
 } from './lib/game';
 import { STRINGS, detectLang } from './lib/i18n';
-import { generate, type Difficulty } from './lib/sudoku';
+import { generate, layoutOf, type Difficulty } from './lib/sudoku';
 import { useStoredState } from './lib/use-stored-state';
 import { useWakeLock } from './lib/use-wake-lock';
 
@@ -33,7 +33,7 @@ export default function App() {
   // Games saved while the app had no notes come back without them.
   const game = store.game && {
     ...store.game,
-    notes: store.game.notes ?? new Array(81).fill(0),
+    notes: store.game.notes ?? new Array(store.game.givens.length).fill(0),
   };
   const [settings, setSettings] = useStoredState<Settings>(
     'sudoku-settings',
@@ -93,6 +93,7 @@ export default function App() {
     if (game && selected !== undefined) update(erase(game, selected));
   };
 
+  const size = game ? layoutOf(game.values).size : 9;
   const limit = game ? hintLimitFor(game.difficulty, settings.hintLimit) : 0;
   const left = game ? hintsLeft(game, limit) : 0;
 
@@ -118,11 +119,11 @@ export default function App() {
       const move = MOVES[e.key];
       if (move) {
         e.preventDefault();
-        const i = selected ?? 40;
-        const r = (Math.floor(i / 9) + move[0] + 9) % 9;
-        const c = ((i % 9) + move[1] + 9) % 9;
-        setSelected(r * 9 + c);
-      } else if (/^[1-9]$/.test(key)) {
+        const i = selected ?? Math.floor((size * size) / 2);
+        const r = (Math.floor(i / size) + move[0] + size) % size;
+        const c = ((i % size) + move[1] + size) % size;
+        setSelected(r * size + c);
+      } else if (/^[1-9]$/.test(key) && Number(key) <= size) {
         input(Number(key));
       } else if (key === 'backspace' || key === 'delete' || key === '0') {
         clear();
@@ -251,17 +252,20 @@ export default function App() {
                 )}
               </div>
 
-              <div className={notesMode ? 'pad pad--notes' : 'pad'}>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+              <div
+                className={notesMode ? 'pad pad--notes' : 'pad'}
+                style={{ '--size': size } as CSSProperties}
+              >
+                {Array.from({ length: size }, (_, k) => k + 1).map((d) => (
                   <button
                     key={d}
                     className='pad__key'
                     onClick={() => input(d)}
-                    disabled={counts[d] >= 9 && !notesMode}
+                    disabled={counts[d] >= size && !notesMode}
                   >
                     {d}
                     <span className='pad__left'>
-                      {Math.max(9 - counts[d], 0) || ''}
+                      {Math.max(size - counts[d], 0) || ''}
                     </span>
                   </button>
                 ))}

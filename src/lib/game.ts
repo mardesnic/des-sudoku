@@ -1,11 +1,10 @@
 import type { Language } from './i18n';
 import {
-  PEERS,
-  UNITS,
   bit,
   candidates,
   digits,
   has,
+  layoutOf,
   type Difficulty,
   type Grid,
   type Puzzle,
@@ -60,7 +59,7 @@ export const initialStats: Stats = {
 export const newGame = (puzzle: Puzzle): Game => ({
   ...puzzle,
   values: [...puzzle.givens],
-  notes: new Array(81).fill(0),
+  notes: new Array(puzzle.givens.length).fill(0),
   history: [],
   mistakes: 0,
   hints: 0,
@@ -100,7 +99,7 @@ function apply(
 // column and box.
 function place(game: Game, i: number, d: number): Game {
   const updates = [{ i, value: d, notes: 0 }];
-  for (const p of PEERS[i]) {
+  for (const p of layoutOf(game.values).peers[i]) {
     if (has(game.notes[p], d)) {
       updates.push({
         i: p,
@@ -160,8 +159,9 @@ export function hintCell(game: Game, selected?: number) {
   const cand = known.map((v, i) => (v ? 0 : candidates(known, i)));
   const single = open.find((i) => digits(cand[i]).length === 1);
   if (single !== undefined) return single;
-  for (const unit of UNITS) {
-    for (let d = 1; d <= 9; d++) {
+  const { size, units } = layoutOf(values);
+  for (const unit of units) {
+    for (let d = 1; d <= size; d++) {
       const spots = unit.filter((i) => has(cand[i], d));
       if (spots.length === 1) return spots[0];
     }
@@ -177,7 +177,7 @@ export function hint(game: Game, selected?: number): [Game, number?] {
   return [{ ...next, hints: next.hints + 1 }, i];
 }
 
-// How many of each digit are on the board, indexed 1–9.
+// How many of each digit are on the board, indexed from 1.
 export function placed(values: Grid) {
   const out = new Array(10).fill(0);
   for (const v of values) out[v]++;

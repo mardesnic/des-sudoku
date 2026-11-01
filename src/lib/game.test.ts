@@ -16,11 +16,11 @@ import {
 } from './game';
 import {
   DIFFICULTIES,
-  PEERS,
-  UNITS,
   bit,
   generate,
   isUnique,
+  layout,
+  layoutOf,
   rate,
   solve,
 } from './sudoku';
@@ -34,16 +34,29 @@ function seeded(seed = 1) {
   };
 }
 
-const isValid = (grid: number[]) =>
-  UNITS.every((unit) => new Set(unit.map((i) => grid[i])).size === 9);
+const isValid = (grid: number[]) => {
+  const { size, units } = layoutOf(grid);
+  return units.every((unit) => new Set(unit.map((i) => grid[i])).size === size);
+};
 
 const puzzles = Object.fromEntries(
   DIFFICULTIES.map((d) => [d, generate(d, seeded(DIFFICULTIES.indexOf(d) + 1))])
 );
 
 describe('sudoku', () => {
-  it('knows each cell’s 20 peers', () => {
-    expect(PEERS.every((p) => p.length === 20)).toBe(true);
+  it('knows each cell’s peers', () => {
+    expect(layout(9).peers.every((p) => p.length === 20)).toBe(true);
+    expect(layout(6).peers.every((p) => p.length === 12)).toBe(true);
+  });
+
+  it('lays out 6×6 boxes 2 rows tall and 3 columns wide', () => {
+    const { box } = layout(6);
+    expect([0, 1, 2, 3, 6, 9, 12].map(box)).toEqual([0, 0, 0, 1, 0, 1, 2]);
+  });
+
+  it('makes kids puzzles on a 6×6 board', () => {
+    expect(puzzles.kids.givens).toHaveLength(36);
+    expect(puzzles.easy.givens).toHaveLength(81);
   });
 
   it('solves a known puzzle', () => {
@@ -66,13 +79,14 @@ describe('sudoku', () => {
       expect(isValid(solution)).toBe(true);
       expect(givens.every((v, i) => v === 0 || v === solution[i])).toBe(true);
       expect(isUnique(givens)).toBe(true);
-      expect(rate(givens)).toBe({ kids: 1, easy: 1, medium: 1, hard: 2, expert: 3 }[d]);
+      expect(rate(givens)).toBe(
+        { kids: 1, easy: 1, medium: 1, hard: 2, expert: 3 }[d]
+      );
     });
   }
 
   it('makes harder puzzles with fewer numbers', () => {
     const clues = (d: string) => puzzles[d].givens.filter(Boolean).length;
-    expect(clues('kids')).toBeGreaterThan(clues('easy'));
     expect(clues('easy')).toBeGreaterThan(clues('medium'));
     expect(clues('medium')).toBeGreaterThan(clues('hard'));
   });
@@ -160,7 +174,7 @@ describe('game', () => {
     let game = start();
     const i = open(game);
     const d = game.solution[i];
-    const peer = PEERS[i].find((p) => !game.givens[p])!;
+    const peer = layoutOf(game.values).peers[i].find((p) => !game.givens[p])!;
     game = toggleNote(game, peer, d);
     expect(game.notes[peer]).toBe(bit(d));
 
@@ -238,6 +252,25 @@ describe('game', () => {
     expect(game.solved).toBe(false);
     game = enter(game, i, game.solution[i]);
     expect(game.solved).toBe(true);
+  });
+});
+
+describe('kids game', () => {
+  it('solves with hints and counts only digits 1–6', () => {
+    let game = newGame(puzzles.kids);
+    for (let n = 0; n < 36 && !game.solved; n++) [game] = hint(game);
+    expect(game.solved).toBe(true);
+    expect(placed(game.values).slice(1)).toEqual([6, 6, 6, 6, 6, 6, 0, 0, 0]);
+  });
+
+  it('clears notes from the 6×6 row, column and box', () => {
+    let game = newGame(puzzles.kids);
+    const i = game.givens.indexOf(0);
+    const d = game.solution[i];
+    const peer = layoutOf(game.values).peers[i].find((p) => !game.givens[p])!;
+    game = toggleNote(game, peer, d);
+    game = enter(game, i, d);
+    expect(game.notes[peer]).toBe(0);
   });
 });
 

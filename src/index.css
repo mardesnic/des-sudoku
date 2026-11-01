@@ -277,21 +277,42 @@ h2 {
   background: var(--line-thin);
 }
 
-.board__box:nth-child(1) {
+.board__box:first-child {
   border-top-left-radius: 10px;
   overflow: hidden;
 }
-.board__box:nth-child(3) {
+.board--9 .board__box:nth-child(3),
+.board--6 .board__box:nth-child(2) {
   border-top-right-radius: 10px;
   overflow: hidden;
 }
-.board__box:nth-child(7) {
+.board--9 .board__box:nth-child(7),
+.board--6 .board__box:nth-child(5) {
   border-bottom-left-radius: 10px;
   overflow: hidden;
 }
-.board__box:nth-child(9) {
+.board__box:last-child {
   border-bottom-right-radius: 10px;
   overflow: hidden;
+}
+
+/* The 6×6 kids board: boxes 2 rows tall and 3 columns wide, stacked in
+   three rows of two. */
+.board--6 {
+  grid-template: repeat(3, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
+}
+
+.board--6 .board__box,
+.board--6 .notes {
+  grid-template: repeat(2, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
+}
+
+.board--6 .cell {
+  font-size: 9cqw;
+}
+
+.board--6 .note {
+  font-size: 3.6cqw;
 }
 
 .cell {
@@ -395,7 +416,7 @@ h2 {
 
 .pad {
   display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--size, 9), minmax(0, 1fr));
   gap: 5px;
 }
 

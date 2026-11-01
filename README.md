@@ -10,7 +10,7 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 
 ## Features
 
-- New puzzles made on your device: kids, easy, medium, hard and expert
+- New puzzles made on your device: kids (a 6×6 board), easy, medium, hard and expert
 - Levels are set by the techniques a puzzle needs, not only by how many numbers it starts with
 - Highlights the row, column, box and matching numbers of the selected cell
 - Mistakes shown in red

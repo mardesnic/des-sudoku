@@ -1,8 +1,15 @@
-// Grids are 81 numbers, row by row, with 0 for an empty cell.
+// Grids are size × size numbers, row by row, with 0 for an empty cell:
+// 81 for the usual 9×9 board, 36 for the 6×6 kids board.
 export type Grid = number[];
 export type Random = () => number;
 
-export const DIFFICULTIES = ['kids', 'easy', 'medium', 'hard', 'expert'] as const;
+export const DIFFICULTIES = [
+  'kids',
+  'easy',
+  'medium',
+  'hard',
+  'expert',
+] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
 export type Puzzle = {
@@ -11,30 +18,59 @@ export type Puzzle = {
   solution: Grid;
 };
 
-export const row = (i: number) => Math.floor(i / 9);
-export const col = (i: number) => i % 9;
-export const box = (i: number) =>
-  Math.floor(row(i) / 3) * 3 + Math.floor(col(i) / 3);
+export type Layout = {
+  size: number;
+  cells: number[];
+  row: (i: number) => number;
+  col: (i: number) => number;
+  box: (i: number) => number;
+  units: number[][]; // rows, then columns, then boxes
+  peers: number[][]; // cells sharing a row, column or box with each cell
+  all: number; // candidate mask with every digit set
+};
 
-const CELLS = Array.from({ length: 81 }, (_, i) => i);
+// 9×9 boards have 3×3 boxes; 6×6 boards have boxes 2 rows tall and 3
+// columns wide.
+const BOX_ROWS: Record<number, number> = { 6: 2, 9: 3 };
 
-// The 27 rows, columns and boxes.
-export const UNITS: number[][] = [
-  ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((r) => CELLS.filter((i) => row(i) === r)),
-  ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((c) => CELLS.filter((i) => col(i) === c)),
-  ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((b) => CELLS.filter((i) => box(i) === b)),
-];
+const layouts = new Map<number, Layout>();
 
-// The 20 cells that share a row, column or box with each cell.
-export const PEERS: number[][] = CELLS.map((i) =>
-  CELLS.filter(
-    (j) =>
-      j !== i && (row(j) === row(i) || col(j) === col(i) || box(j) === box(i))
-  )
-);
+export function layout(size: number): Layout {
+  const cached = layouts.get(size);
+  if (cached) return cached;
+  const boxRows = BOX_ROWS[size];
+  const boxCols = size / boxRows;
+  const cells = Array.from({ length: size * size }, (_, i) => i);
+  const lines = Array.from({ length: size }, (_, k) => k);
+  const row = (i: number) => Math.floor(i / size);
+  const col = (i: number) => i % size;
+  const box = (i: number) =>
+    Math.floor(row(i) / boxRows) * boxRows + Math.floor(col(i) / boxCols);
+  const l: Layout = {
+    size,
+    cells,
+    row,
+    col,
+    box,
+    units: [row, col, box].flatMap((key) =>
+      lines.map((k) => cells.filter((i) => key(i) === k))
+    ),
+    peers: cells.map((i) =>
+      cells.filter(
+        (j) =>
+          j !== i &&
+          (row(j) === row(i) || col(j) === col(i) || box(j) === box(i))
+      )
+    ),
+    all: (1 << (size + 1)) - 2,
+  };
+  layouts.set(size, l);
+  return l;
+}
 
-// Candidate sets are bitmasks: bit d is set when digit d (1–9) fits.
-export const ALL = 0b1111111110;
+export const layoutOf = (grid: Grid) => layout(Math.sqrt(grid.length));
+
+// Candidate sets are bitmasks: bit d is set when digit d fits.
 export const bit = (d: number) => 1 << d;
 export const has = (mask: number, d: number) => (mask & bit(d)) !== 0;
 
@@ -51,8 +87,9 @@ export function digits(mask: number) {
 }
 
 export function candidates(grid: Grid, i: number) {
-  let mask = ALL;
-  for (const p of PEERS[i]) mask &= ~bit(grid[p]);
+  const { all, peers } = layoutOf(grid);
+  let mask = all;
+  for (const p of peers[i]) mask &= ~bit(grid[p]);
   return mask;
 }
 
@@ -72,17 +109,19 @@ export function solve(
   limit = 1,
   random?: Random
 ): { count: number; solution?: Grid } {
+  const { size, cells, row, col, box, all } = layoutOf(grid);
   const g = [...grid];
-  const used = new Array(27).fill(0);
-  for (const i of CELLS) {
+  // Digits used in each row, then column, then box.
+  const used = new Array(3 * size).fill(0);
+  const units = (i: number) => [row(i), size + col(i), 2 * size + box(i)];
+  for (const i of cells) {
     if (!g[i]) continue;
     const b = bit(g[i]);
-    if (used[row(i)] & b || used[9 + col(i)] & b || used[18 + box(i)] & b) {
-      return { count: 0 };
-    }
-    used[row(i)] |= b;
-    used[9 + col(i)] |= b;
-    used[18 + box(i)] |= b;
+    const [r, c, bx] = units(i);
+    if (used[r] & b || used[c] & b || used[bx] & b) return { count: 0 };
+    used[r] |= b;
+    used[c] |= b;
+    used[bx] |= b;
   }
 
   let count = 0;
@@ -92,9 +131,10 @@ export function solve(
     let best = -1;
     let bestMask = 0;
     let bestCount = 10;
-    for (const i of CELLS) {
+    for (const i of cells) {
       if (g[i]) continue;
-      const mask = ALL & ~(used[row(i)] | used[9 + col(i)] | used[18 + box(i)]);
+      const [r, c, bx] = units(i);
+      const mask = all & ~(used[r] | used[c] | used[bx]);
       const n = bitCount(mask);
       if (n === 0) return;
       if (n < bestCount) {
@@ -110,9 +150,7 @@ export function solve(
       return;
     }
 
-    const r = row(best);
-    const c = 9 + col(best);
-    const bx = 18 + box(best);
+    const [r, c, bx] = units(best);
     const options = random
       ? shuffle(digits(bestMask), random)
       : digits(bestMask);
@@ -141,14 +179,15 @@ export const isUnique = (grid: Grid) => solve(grid, 2).count === 1;
 // needed: 1 singles, 2 locked candidates, 3 pairs, triples and X-wings,
 // 4 something beyond those.
 export function rate(grid: Grid): number {
+  const { size, cells, row, col, box, units, peers, all } = layoutOf(grid);
   const g = [...grid];
-  const cand = CELLS.map((i) => (g[i] ? 0 : candidates(g, i)));
+  const cand = cells.map((i) => (g[i] ? 0 : candidates(g, i)));
   let level = 1;
 
   const place = (i: number, d: number) => {
     g[i] = d;
     cand[i] = 0;
-    for (const p of PEERS[i]) cand[p] &= ~bit(d);
+    for (const p of peers[i]) cand[p] &= ~bit(d);
   };
 
   const eliminate = (cells: number[], mask: number) => {
@@ -164,14 +203,14 @@ export function rate(grid: Grid): number {
 
   const singles = () => {
     let found = false;
-    for (const i of CELLS) {
+    for (const i of cells) {
       if (!g[i] && bitCount(cand[i]) === 1) {
         place(i, digits(cand[i])[0]);
         found = true;
       }
     }
-    for (const unit of UNITS) {
-      for (let d = 1; d <= 9; d++) {
+    for (const unit of units) {
+      for (let d = 1; d <= size; d++) {
         const spots = unit.filter((i) => has(cand[i], d));
         if (spots.length === 1) {
           place(spots[0], d);
@@ -187,14 +226,14 @@ export function rate(grid: Grid): number {
   // elsewhere in that box.
   const lockedCandidates = () => {
     let changed = false;
-    for (const unit of UNITS) {
-      for (let d = 1; d <= 9; d++) {
+    for (const unit of units) {
+      for (let d = 1; d <= size; d++) {
         const spots = unit.filter((i) => has(cand[i], d));
         if (spots.length < 2) continue;
         for (const key of [row, col, box]) {
           const k = key(spots[0]);
           if (!spots.every((i) => key(i) === k)) continue;
-          const others = CELLS.filter((i) => key(i) === k && !unit.includes(i));
+          const others = cells.filter((i) => key(i) === k && !unit.includes(i));
           if (eliminate(others, bit(d))) changed = true;
         }
       }
@@ -204,7 +243,7 @@ export function rate(grid: Grid): number {
 
   const subsets = () => {
     let changed = false;
-    for (const unit of UNITS) {
+    for (const unit of units) {
       const open = unit.filter((i) => !g[i]);
       // Naked pairs and triples: n cells that between them allow only n
       // digits take those digits from the rest of the unit.
@@ -218,15 +257,15 @@ export function rate(grid: Grid): number {
         }
       }
       // Hidden pairs: two digits that fit only in the same two cells.
-      for (let a = 1; a <= 9; a++) {
+      for (let a = 1; a <= size; a++) {
         const spotsA = open.filter((i) => has(cand[i], a));
         if (spotsA.length !== 2) continue;
-        for (let b = a + 1; b <= 9; b++) {
+        for (let b = a + 1; b <= size; b++) {
           const spotsB = open.filter((i) => has(cand[i], b));
           if (spotsB.length !== 2 || spotsB.some((i) => !spotsA.includes(i))) {
             continue;
           }
-          if (eliminate(spotsA, ALL & ~(bit(a) | bit(b)))) changed = true;
+          if (eliminate(spotsA, all & ~(bit(a) | bit(b)))) changed = true;
         }
       }
     }
@@ -238,10 +277,10 @@ export function rate(grid: Grid): number {
   // Likewise with rows and columns swapped.
   const xWing = () => {
     let changed = false;
-    for (let d = 1; d <= 9; d++) {
+    for (let d = 1; d <= size; d++) {
       for (const [lines, cross] of [
-        [UNITS.slice(0, 9), col],
-        [UNITS.slice(9, 18), row],
+        [units.slice(0, size), col],
+        [units.slice(size, 2 * size), row],
       ] as const) {
         const pairs = lines
           .map((line) => line.filter((i) => has(cand[i], d)))
@@ -249,7 +288,7 @@ export function rate(grid: Grid): number {
         for (const [a, b] of combinations(pairs, 2)) {
           const x = a.map(cross);
           if (x[0] !== cross(b[0]) || x[1] !== cross(b[1])) continue;
-          const others = CELLS.filter(
+          const others = cells.filter(
             (i) => x.includes(cross(i)) && !a.includes(i) && !b.includes(i)
           );
           if (eliminate(others, bit(d))) changed = true;
@@ -285,31 +324,46 @@ function combinations<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-// How far to empty the grid, and the techniques each level may need.
-const TARGETS: Record<Difficulty, { clues: number; level: number }> = {
-  kids: { clues: 50, level: 1 },
-  easy: { clues: 38, level: 1 },
-  medium: { clues: 30, level: 1 },
-  hard: { clues: 0, level: 2 },
-  expert: { clues: 0, level: 3 },
+// The board size, how far to empty the grid, and the techniques each
+// level may need.
+const TARGETS: Record<
+  Difficulty,
+  { size: number; clues: number; level: number }
+> = {
+  kids: { size: 6, clues: 16, level: 1 },
+  easy: { size: 9, clues: 38, level: 1 },
+  medium: { size: 9, clues: 30, level: 1 },
+  hard: { size: 9, clues: 0, level: 2 },
+  expert: { size: 9, clues: 0, level: 3 },
 };
+
+export const sizeOf = (difficulty: Difficulty) => TARGETS[difficulty].size;
 
 const MAX_ATTEMPTS = 200;
 
 export function generate(difficulty: Difficulty, random: Random): Puzzle {
   const target = TARGETS[difficulty];
+  const { cells } = layout(target.size);
+  const last = cells.length - 1;
   let closest: { puzzle: Puzzle; level: number } | undefined;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const solution = solve(new Array(81).fill(0), 1, random).solution!;
+    const solution = solve(
+      new Array(cells.length).fill(0),
+      1,
+      random
+    ).solution!;
     const givens = [...solution];
 
     // Clear cells in pairs mirrored through the centre, like printed
     // puzzles, keeping only removals that leave a single solution.
-    let clues = 81;
-    for (const i of shuffle(CELLS.slice(0, 41), random)) {
+    let clues = cells.length;
+    for (const i of shuffle(
+      cells.slice(0, Math.ceil(cells.length / 2)),
+      random
+    )) {
       if (clues <= target.clues) break;
-      const pair = i === 40 ? [40] : [i, 80 - i];
+      const pair = i === last - i ? [i] : [i, last - i];
       for (const j of pair) givens[j] = 0;
       if (isUnique(givens)) {
         clues -= pair.length;
