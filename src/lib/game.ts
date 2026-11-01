@@ -50,6 +50,7 @@ export const hintsLeft = (game: Game, limit: number | null) =>
 export type Stats = { [D in Difficulty]: { solved: number } };
 
 export const initialStats: Stats = {
+  kids: { solved: 0 },
   easy: { solved: 0 },
   medium: { solved: 0 },
   hard: { solved: 0 },

@@ -2,7 +2,7 @@
 export type Grid = number[];
 export type Random = () => number;
 
-export const DIFFICULTIES = ['easy', 'medium', 'hard', 'expert'] as const;
+export const DIFFICULTIES = ['kids', 'easy', 'medium', 'hard', 'expert'] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
 export type Puzzle = {
@@ -287,6 +287,7 @@ function combinations<T>(items: T[], size: number): T[][] {
 
 // How far to empty the grid, and the techniques each level may need.
 const TARGETS: Record<Difficulty, { clues: number; level: number }> = {
+  kids: { clues: 50, level: 1 },
   easy: { clues: 38, level: 1 },
   medium: { clues: 30, level: 1 },
   hard: { clues: 0, level: 2 },

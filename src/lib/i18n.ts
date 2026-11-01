@@ -30,6 +30,7 @@ const en = {
   cancel: 'Cancel',
   done: 'Done',
   levels: {
+    kids: 'Kids',
     easy: 'Easy',
     medium: 'Medium',
     hard: 'Hard',
@@ -73,6 +74,7 @@ const hr: Strings = {
   cancel: 'Odustani',
   done: 'Gotovo',
   levels: {
+    kids: 'Djeca',
     easy: 'Lagano',
     medium: 'Srednje',
     hard: 'Teško',

@@ -66,12 +66,13 @@ describe('sudoku', () => {
       expect(isValid(solution)).toBe(true);
       expect(givens.every((v, i) => v === 0 || v === solution[i])).toBe(true);
       expect(isUnique(givens)).toBe(true);
-      expect(rate(givens)).toBe({ easy: 1, medium: 1, hard: 2, expert: 3 }[d]);
+      expect(rate(givens)).toBe({ kids: 1, easy: 1, medium: 1, hard: 2, expert: 3 }[d]);
     });
   }
 
   it('makes harder puzzles with fewer numbers', () => {
     const clues = (d: string) => puzzles[d].givens.filter(Boolean).length;
+    expect(clues('kids')).toBeGreaterThan(clues('easy'));
     expect(clues('easy')).toBeGreaterThan(clues('medium'));
     expect(clues('medium')).toBeGreaterThan(clues('hard'));
   });
