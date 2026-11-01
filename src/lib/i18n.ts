@@ -61,6 +61,9 @@ const en = {
   themes: {
     default: 'Default',
     narwhal: 'Narwhal',
+    blocks: 'Blocks',
+    ninja: 'Ninja',
+    speed: 'Speed',
   } as Record<Theme, string>,
   statistics: 'Statistics',
   solvedColumn: 'Solved',
@@ -106,6 +109,9 @@ const hr: Strings = {
   themes: {
     default: 'Zadana',
     narwhal: 'Narval',
+    blocks: 'Kocke',
+    ninja: 'Nindža',
+    speed: 'Brzina',
   },
   statistics: 'Statistika',
   solvedColumn: 'Riješeno',

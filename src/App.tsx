@@ -20,6 +20,7 @@ import {
   type Game,
   type Settings,
   type Stats,
+  type Theme,
 } from './lib/game';
 import { STRINGS, detectLang } from './lib/i18n';
 import { generate, layoutOf, type Difficulty } from './lib/sudoku';
@@ -59,8 +60,7 @@ export default function App() {
       'meta[name=theme-color]'
     )) {
       meta.dataset.default ??= meta.content;
-      meta.content =
-        settings.theme === 'narwhal' ? '#6fe6fc' : meta.dataset.default;
+      meta.content = THEME_COLORS[settings.theme] ?? meta.dataset.default;
     }
   }, [settings.theme]);
 
@@ -282,6 +282,13 @@ export default function App() {
     </main>
   );
 }
+
+const THEME_COLORS: Partial<Record<Theme, string>> = {
+  narwhal: '#6fe6fc',
+  blocks: '#6ab04c',
+  ninja: '#2a0f18',
+  speed: '#3b8cff',
+};
 
 const MOVES: Record<string, [number, number]> = {
   ArrowUp: [-1, 0],

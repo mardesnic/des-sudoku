@@ -97,13 +97,24 @@
 }
 
 /* Controls that sit straight on the picture get a frosted backing. */
-[data-theme='narwhal'] .status,
-[data-theme='narwhal'] .tool {
+:is(
+    [data-theme='narwhal'],
+    [data-theme='blocks'],
+    [data-theme='ninja'],
+    [data-theme='speed']
+  )
+  :is(.status, .tool) {
   background: var(--glass);
   backdrop-filter: blur(8px);
 }
 
-[data-theme='narwhal'] .status {
+:is(
+    [data-theme='narwhal'],
+    [data-theme='blocks'],
+    [data-theme='ninja'],
+    [data-theme='speed']
+  )
+  .status {
   border-radius: 14px;
   padding: 0 14px;
 }
@@ -127,11 +138,149 @@
   text-shadow: 0 1px 6px rgb(13 50 96 / 0.45);
 }
 
-[data-theme='narwhal'] .footer a {
+:is(
+    [data-theme='narwhal'],
+    [data-theme='blocks'],
+    [data-theme='ninja'],
+    [data-theme='speed']
+  )
+  .footer
+  a {
   padding: 4px 12px;
   border-radius: 999px;
   background: var(--glass);
   color: var(--text);
+}
+
+/* Blocks: a world built from grass and dirt blocks, with square corners
+   on everything. */
+:root[data-theme='blocks'] {
+  --bg: #866043;
+  --surface: #f3ead8;
+  --text: #2b1d0e;
+  --muted: #6b5640;
+  --border: #b9a27f;
+  --accent: #3f8f29;
+  --on-accent: #ffffff;
+  --line: #3b2a17;
+  --line-thin: #c9b48f;
+  --peer: #e9dcc0;
+  --same: #c6e3a4;
+  --selected: #9fd27a;
+  --wrong: #c0392b;
+  --wrong-bg: #f6d5cc;
+  --glass: rgb(243 234 216 / 0.92);
+
+  color-scheme: light;
+}
+
+[data-theme='blocks'] *,
+[data-theme='blocks'] *::before {
+  border-radius: 0 !important;
+}
+
+[data-theme='blocks'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(#6ab04c 0 72px, #4f8f34 72px 84px, transparent 84px),
+    conic-gradient(#7a5536 25%, #8b6343 0 50%, #7a5536 0 75%, #8b6343 0) 0
+      84px / 48px 48px,
+    #866043;
+}
+
+[data-theme='blocks'] h1 {
+  color: #fff;
+  font-family: ui-monospace, 'Courier New', monospace;
+  text-shadow: 3px 3px 0 #2b1d0e;
+}
+
+/* Ninja: red and gold, with a full moon rising. */
+:root[data-theme='ninja'] {
+  --bg: #1a0f14;
+  --surface: #24161c;
+  --text: #f8ecd4;
+  --muted: #c9a98a;
+  --border: #4a2a30;
+  --accent: #e0a526;
+  --on-accent: #1a0f14;
+  --line: #e0a526;
+  --line-thin: #3e252b;
+  --peer: #3d232c;
+  --same: #5a2a22;
+  --selected: #8c2f22;
+  --wrong: #ff6b5b;
+  --wrong-bg: #4a1c1c;
+  --glass: rgb(36 22 28 / 0.88);
+
+  color-scheme: dark;
+}
+
+[data-theme='ninja'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      circle at 78% 88%,
+      #ffe9b0 0 40px,
+      rgb(255 233 176 / 0.25) 41px 70px,
+      transparent 71px
+    ),
+    linear-gradient(#2a0f18, #7a1a1a 60%, #1a0f14);
+}
+
+[data-theme='ninja'] h1 {
+  color: #e0a526;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Speed: bright blue with yellow streaks rushing past. */
+:root[data-theme='speed'] {
+  --bg: #1e6fe0;
+  --surface: #ffffff;
+  --text: #0b2a66;
+  --muted: #4b67a0;
+  --border: #c8d8f5;
+  --accent: #1450c8;
+  --on-accent: #ffffff;
+  --line: #0b2a66;
+  --line-thin: #cfdcf5;
+  --peer: #e8f0fd;
+  --same: #fff1a8;
+  --selected: #ffd84a;
+  --wrong: #e0322b;
+  --wrong-bg: #fde0dc;
+  --glass: rgb(255 255 255 / 0.9);
+
+  color-scheme: light;
+}
+
+[data-theme='speed'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(
+      -20deg,
+      transparent 0 60px,
+      rgb(255 255 255 / 0.14) 60px 64px,
+      transparent 64px 130px,
+      rgb(255 216 74 / 0.4) 130px 134px
+    ),
+    linear-gradient(160deg, #3b8cff, #1450c8);
+}
+
+[data-theme='speed'] h1 {
+  color: #fff;
+  font-style: italic;
+  font-weight: 800;
+  text-shadow: 2px 2px 0 #0b2a66;
 }
 
 * {
@@ -593,6 +742,11 @@ h2 {
   padding: 3px;
   border-radius: 12px;
   background: var(--bg);
+}
+
+.segmented--wrap {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .segmented button {
