@@ -22,7 +22,7 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 - Picks up where you left off after a reload
 - Keeps the screen on while you play
 - In English and Croatian, following the phone's language unless you pick one
-- Light and dark mode, plus Narwhal, Blocks, Ninja and Speed themes
+- Light and dark mode, plus Narwhal and Blocks themes
 - No ads, accounts or tracking
 
 ## Development

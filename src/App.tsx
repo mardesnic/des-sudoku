@@ -15,6 +15,7 @@ import {
   newGame,
   placed,
   recordWin,
+  THEMES,
   toggleNote,
   undo,
   type Game,
@@ -36,10 +37,14 @@ export default function App() {
     ...store.game,
     notes: store.game.notes ?? new Array(store.game.givens.length).fill(0),
   };
-  const [settings, setSettings] = useStoredState<Settings>(
+  const [stored, setSettings] = useStoredState<Settings>(
     'sudoku-settings',
     initialSettings
   );
+  // A theme saved before it was removed falls back to the default.
+  const settings = THEMES.includes(stored.theme)
+    ? stored
+    : { ...stored, theme: initialSettings.theme };
   const [stats, setStats] = useStoredState<Stats>('sudoku-stats', initialStats);
   const [view, setView] = useState<View>(game ? 'play' : 'new');
   const [selected, setSelected] = useState<number>();
@@ -286,8 +291,6 @@ export default function App() {
 const THEME_COLORS: Partial<Record<Theme, string>> = {
   narwhal: '#6fe6fc',
   blocks: '#6ab04c',
-  ninja: '#2a0f18',
-  speed: '#3b8cff',
 };
 
 const MOVES: Record<string, [number, number]> = {

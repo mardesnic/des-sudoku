@@ -67,7 +67,7 @@ export function SettingsView({
 
         <div className='field'>
           <span>{t.theme}</span>
-          <div className='segmented segmented--wrap'>
+          <div className='segmented'>
             {THEMES.map((theme) => (
               <button
                 key={theme}

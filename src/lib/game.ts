@@ -28,13 +28,7 @@ export type Settings = {
   theme: Theme;
 };
 
-export const THEMES = [
-  'default',
-  'narwhal',
-  'blocks',
-  'ninja',
-  'speed',
-] as const;
+export const THEMES = ['default', 'narwhal', 'blocks'] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const initialSettings: Settings = {
