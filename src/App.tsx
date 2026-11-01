@@ -100,6 +100,8 @@ export default function App() {
   };
 
   const size = game ? layoutOf(game.values).size : 9;
+  // The baby board is simple enough to play without notes.
+  const canNote = !usesShapes(size);
   const limit = game ? hintLimitFor(game.difficulty, settings.hintLimit) : 0;
   const left = game ? hintsLeft(game, limit) : 0;
 
@@ -133,7 +135,7 @@ export default function App() {
         input(Number(key));
       } else if (key === 'backspace' || key === 'delete' || key === '0') {
         clear();
-      } else if (key === 'n') {
+      } else if (key === 'n' && canNote) {
         setNotesMode((n) => !n);
       }
     };
@@ -225,7 +227,7 @@ export default function App() {
             </section>
           ) : (
             <>
-              <div className={limit === 0 ? 'tools tools--3' : 'tools'}>
+              <div className='tools'>
                 <button
                   className='tool'
                   onClick={() => update(undo(game))}
@@ -238,14 +240,16 @@ export default function App() {
                   <Icon name='erase' />
                   {t.erase}
                 </button>
-                <button
-                  className={notesMode ? 'tool tool--on' : 'tool'}
-                  onClick={() => setNotesMode(!notesMode)}
-                  aria-pressed={notesMode}
-                >
-                  <Icon name='notes' />
-                  {t.notes}
-                </button>
+                {canNote && (
+                  <button
+                    className={notesMode ? 'tool tool--on' : 'tool'}
+                    onClick={() => setNotesMode(!notesMode)}
+                    aria-pressed={notesMode}
+                  >
+                    <Icon name='notes' />
+                    {t.notes}
+                  </button>
+                )}
                 {limit !== 0 && (
                   <button
                     className='tool'
