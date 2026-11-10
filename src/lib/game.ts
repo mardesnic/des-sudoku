@@ -26,6 +26,7 @@ export type Settings = {
   hintLimit: number | null; // hints per game: 0 turns them off, null is unlimited
   language: Language;
   theme: Theme;
+  sound: boolean;
 };
 
 export const THEMES = ['default', 'narwhal', 'blocks'] as const;
@@ -35,6 +36,7 @@ export const initialSettings: Settings = {
   hintLimit: 5,
   language: 'auto',
   theme: 'default',
+  sound: true,
 };
 
 export const HINT_LIMITS = [0, 3, 5, 10, null];

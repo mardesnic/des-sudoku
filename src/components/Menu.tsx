@@ -94,6 +94,21 @@ export function SettingsView({
             ))}
           </div>
         </div>
+
+        <div className='field'>
+          <span>{t.sound}</span>
+          <div className='segmented'>
+            {[true, false].map((sound) => (
+              <button
+                key={String(sound)}
+                aria-pressed={settings.sound === sound}
+                onClick={() => setSettings({ ...settings, sound })}
+              >
+                {sound ? t.on : t.off}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className='card'>

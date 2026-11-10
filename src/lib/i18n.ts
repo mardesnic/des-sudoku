@@ -55,9 +55,11 @@ const en = {
   hintsDetail:
     'How many hints you get per game. A hint fills in the easiest cell to work out next. Hard and expert puzzles have no hints.',
   off: 'Off',
+  on: 'On',
   unlimited: 'Unlimited',
   language: 'Language',
   automatic: 'Automatic',
+  sound: 'Sound and vibration',
   theme: 'Theme',
   themes: {
     default: 'Default',
@@ -103,9 +105,11 @@ const hr: Strings = {
   hintsDetail:
     'Koliko savjeta imaš u jednoj igri. Savjet upisuje polje koje je sljedeće najlakše odrediti. Teške i ekspert igre nemaju savjete.',
   off: 'Isklj.',
+  on: 'Uklj.',
   unlimited: 'Neograničeno',
   language: 'Jezik',
   automatic: 'Automatski',
+  sound: 'Zvuk i vibracija',
   theme: 'Tema',
   themes: {
     default: 'Zadana',

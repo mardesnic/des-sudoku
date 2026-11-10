@@ -14,6 +14,10 @@ export default defineConfig({
       // Precache theme backgrounds too, so they work offline.
       workbox: { globPatterns: ['**/*.{js,wasm,css,html,webp}'] },
       manifest: {
+        // A fixed id of its own. Not 'des-<name>' like the newer games: this
+        // is the id phones already gave it (its start_url) before it had one,
+        // so an installed copy stays the same app and keeps updating.
+        id: '/des-sudoku/',
         name: 'Sudoku',
         short_name: 'Sudoku',
         description: 'Sudoku puzzles that work offline',
