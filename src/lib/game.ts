@@ -1,4 +1,3 @@
-import type { Language } from './i18n';
 import {
   bit,
   candidates,
@@ -24,7 +23,6 @@ export type Game = Puzzle & {
 
 export type Settings = {
   hintLimit: number | null; // hints per game: 0 turns them off, null is unlimited
-  language: Language;
   theme: Theme;
   sound: boolean;
 };
@@ -34,7 +32,6 @@ export type Theme = (typeof THEMES)[number];
 
 export const initialSettings: Settings = {
   hintLimit: 5,
-  language: 'auto',
   theme: 'default',
   sound: true,
 };

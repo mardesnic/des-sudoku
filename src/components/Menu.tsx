@@ -30,11 +30,15 @@ export function NewGame({
 
 export function SettingsView({
   settings,
+  language,
+  setLanguage,
   setSettings,
   stats,
   t,
 }: {
   settings: Settings;
+  language: Language;
+  setLanguage: (l: Language) => void;
   setSettings: (s: Settings) => void;
   stats: Stats;
   t: Strings;
@@ -86,8 +90,8 @@ export function SettingsView({
             {languages.map((l) => (
               <button
                 key={l}
-                aria-pressed={settings.language === l}
-                onClick={() => setSettings({ ...settings, language: l })}
+                aria-pressed={language === l}
+                onClick={() => setLanguage(l)}
               >
                 {l === 'auto' ? t.automatic : LANG_NAMES[l]}
               </button>
