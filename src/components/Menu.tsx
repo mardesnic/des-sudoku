@@ -21,6 +21,7 @@ export function NewGame({
               ))}
             </span>
             {t.levels[d]}
+            <span className='level__note'>{t.levelNotes[d]}</span>
           </button>
         ))}
       </div>
