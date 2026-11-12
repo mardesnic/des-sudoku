@@ -32,6 +32,8 @@ export function SettingsView({
   settings,
   language,
   setLanguage,
+  sound,
+  setSound,
   setSettings,
   stats,
   t,
@@ -39,6 +41,8 @@ export function SettingsView({
   settings: Settings;
   language: Language;
   setLanguage: (l: Language) => void;
+  sound: boolean;
+  setSound: (on: boolean) => void;
   setSettings: (s: Settings) => void;
   stats: Stats;
   t: Strings;
@@ -102,13 +106,13 @@ export function SettingsView({
         <div className='field'>
           <span>{t.sound}</span>
           <div className='segmented'>
-            {[true, false].map((sound) => (
+            {[true, false].map((on) => (
               <button
-                key={String(sound)}
-                aria-pressed={settings.sound === sound}
-                onClick={() => setSettings({ ...settings, sound })}
+                key={String(on)}
+                aria-pressed={sound === on}
+                onClick={() => setSound(on)}
               >
-                {sound ? t.on : t.off}
+                {on ? t.on : t.off}
               </button>
             ))}
           </div>

@@ -24,7 +24,6 @@ export type Game = Puzzle & {
 export type Settings = {
   hintLimit: number | null; // hints per game: 0 turns them off, null is unlimited
   theme: Theme;
-  sound: boolean;
 };
 
 export const THEMES = ['default', 'narwhal', 'blocks'] as const;
@@ -33,7 +32,6 @@ export type Theme = (typeof THEMES)[number];
 export const initialSettings: Settings = {
   hintLimit: 5,
   theme: 'default',
-  sound: true,
 };
 
 export const HINT_LIMITS = [0, 3, 5, 10, null];
