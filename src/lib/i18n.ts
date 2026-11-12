@@ -27,8 +27,7 @@ const count = (lang: Lang, n: number, forms: Forms) => {
 const en = {
   newGame: 'New game',
   settings: 'Settings',
-  cancel: 'Cancel',
-  done: 'Done',
+  close: 'Close',
   levels: {
     baby: 'Very easy',
     kids: 'Easy',
@@ -87,8 +86,7 @@ export type Strings = typeof en;
 const hr: Strings = {
   newGame: 'Nova igra',
   settings: 'Postavke',
-  cancel: 'Odustani',
-  done: 'Gotovo',
+  close: 'Zatvori',
   levels: {
     baby: 'Vrlo lagano',
     kids: 'Lagano',
