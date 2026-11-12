@@ -68,7 +68,7 @@ export function SettingsView({
                 aria-label={limit === null ? t.unlimited : undefined}
                 onClick={() => setSettings({ ...settings, hintLimit: limit })}
               >
-                {limit === null ? '∞' : limit === 0 ? t.off : limit}
+                {limit === null ? '∞' : limit === 0 ? t.hintsOff : limit}
               </button>
             ))}
           </div>

@@ -14,7 +14,7 @@ On your phone, open it and choose **Add to Home Screen** (Safari) or **Install a
 - Levels are set by the techniques a puzzle needs, not only by how many numbers it starts with
 - Highlights the row, column, box and matching numbers of the selected cell
 - Mistakes shown in red
-- Hints that fill in the easiest cell to work out next: 5 per game by default, or 3, 10, unlimited or off (none on hard and expert)
+- Hints that fill in the easiest cell to work out next: 5 per game by default, or 3, 10, unlimited or off (none on very hard and expert)
 - Notes (pencil marks), tidied away from the row, column and box when you enter a number
 - Undo, erase, and a count of how many of each number are left
 - A count of puzzles solved at each level

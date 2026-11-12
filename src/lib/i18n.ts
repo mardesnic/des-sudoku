@@ -62,9 +62,10 @@ const en = {
   cell: (r: number, c: number) => `Row ${r}, column ${c}`,
   hints: 'Hints',
   hintsDetail:
-    'How many hints you get per game. A hint fills in the easiest cell to work out next. Hard and expert puzzles have no hints.',
+    'How many hints you get per game. A hint fills in the easiest cell to work out next. Very hard and expert puzzles have no hints.',
   off: 'Off',
   on: 'On',
+  hintsOff: 'Off',
   unlimited: 'Unlimited',
   language: 'Language',
   automatic: 'Automatic',
@@ -121,9 +122,11 @@ const hr: Strings = {
   cell: (r, c) => `Redak ${r}, stupac ${c}`,
   hints: 'Savjeti',
   hintsDetail:
-    'Koliko savjeta imaš u jednoj igri. Savjet upisuje polje koje je sljedeće najlakše odrediti. Teške i ekspert igre nemaju savjete.',
-  off: 'Isklj.',
-  on: 'Uklj.',
+    'Koliko savjeta imaš u jednoj igri. Savjet upisuje polje koje je sljedeće najlakše odrediti. Vrlo teške i ekspert igre nemaju savjete.',
+  off: 'Isključeno',
+  on: 'Uključeno',
+  // Short, to fit in the row of hint counts.
+  hintsOff: 'Isklj.',
   unlimited: 'Neograničeno',
   language: 'Jezik',
   automatic: 'Automatski',

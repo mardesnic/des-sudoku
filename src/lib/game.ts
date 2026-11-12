@@ -36,7 +36,7 @@ export const initialSettings: Settings = {
 
 export const HINT_LIMITS = [0, 3, 5, 10, null];
 
-// Hard and expert puzzles are played without hints, whatever the setting.
+// Very hard and expert puzzles (the 'hard' and 'expert' levels) are played without hints, whatever the setting.
 export const hintLimitFor = (difficulty: Difficulty, limit: number | null) =>
   difficulty === 'hard' || difficulty === 'expert' ? 0 : limit;
 
