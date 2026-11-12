@@ -59,6 +59,7 @@ const en = {
   hint: 'Hint',
   allGames: 'All games',
   source: 'Source',
+  version: 'Version',
   cell: (r: number, c: number) => `Row ${r}, column ${c}`,
   hints: 'Hints',
   hintsDetail:
@@ -119,6 +120,7 @@ const hr: Strings = {
   hint: 'Savjet',
   allGames: 'Sve igre',
   source: 'Izvorni kod',
+  version: 'Verzija',
   cell: (r, c) => `Redak ${r}, stupac ${c}`,
   hints: 'Savjeti',
   hintsDetail:
