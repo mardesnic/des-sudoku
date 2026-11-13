@@ -241,13 +241,13 @@ export default function App() {
                   className='button'
                   onClick={() => start(game.difficulty)}
                 >
-                  {t.another(t.levels[game.difficulty])}
+                  {t.next}
                 </button>
                 <button
                   className='button button--secondary'
                   onClick={() => setView('new')}
                 >
-                  {t.changeDifficulty}
+                  {t.changeLevel}
                 </button>
               </div>
             </section>
