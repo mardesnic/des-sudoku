@@ -38,7 +38,7 @@ export default defineConfig({
         name: 'Sudoku',
         short_name: 'Sudoku',
         description: 'Sudoku puzzles that work offline',
-        theme_color: '#3056d3',
+        theme_color: '#a51d9c',
         background_color: '#f4f5f7',
         display: 'standalone',
       },
