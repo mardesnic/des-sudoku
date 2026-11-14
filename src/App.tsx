@@ -228,7 +228,7 @@ export default function App() {
             t={t}
           />
 
-          {game.solved ? (
+          {game.solved && (
             <section className='card solved'>
               <h2>{t.solved}</h2>
               <p>{t.levels[game.difficulty]}</p>
@@ -251,7 +251,11 @@ export default function App() {
                 </button>
               </div>
             </section>
-          ) : (
+          )}
+          <div
+            className={game.solved ? 'under under--hidden' : 'under'}
+            inert={!!game.solved}
+          >
             <>
               <div className='tools'>
                 <button
@@ -310,7 +314,7 @@ export default function App() {
                 ))}
               </div>
             </>
-          )}
+          </div>
         </>
       )}
 
